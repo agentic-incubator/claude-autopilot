@@ -21,6 +21,12 @@ jobs:
       # On a normal push: opens/updates the "chore: release X.Y.Z" PR that bumps
       # package.json, plugin.json, and marketplace.json and regenerates CHANGELOG.md.
       # When that PR is merged: creates the vX.Y.Z tag and the GitHub Release.
+      #
+      # This org disables "Allow GitHub Actions to create and approve pull requests",
+      # so the default GITHUB_TOKEN cannot open the release PR. Provide a PAT (classic
+      # `repo` scope, or fine-grained with Contents + Pull requests: write) as the
+      # RELEASE_PLEASE_TOKEN repo secret. The expression falls back to GITHUB_TOKEN so
+      # the workflow still parses if the secret is absent (it just won't open the PR).
       - uses: googleapis/release-please-action@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
