@@ -1,0 +1,50 @@
+# autopilot-gate.yml — minimal CI that makes pr_ci's merge authority REAL.
+#
+# `autopilot:detect` scaffolds this into a TARGET repo at .github/workflows/autopilot-gate.yml ONLY when
+# pr_ci was chosen and the repo's existing CI does not run on PRs into `base`. It mirrors the local gate's
+# Tier-1 functional checks ({{commands.*}} from profile.yml) so "all required checks green" actually means
+# something. Steps whose command is empty in profile.yml are OMITTED here (a skipped check is never a pass).
+#
+# IMPORTANT — fill in the toolchain. autopilot is stack-agnostic and CANNOT know your language/runtime, so
+# this scaffold does NOT guess a setup step. Add the right one (actions/setup-node, setup-go, setup-java,
+# setup-python, swatinem/rust-cache, etc.) where marked, or the commands below will not find their tools.
+# Review and commit this file yourself before any phase runs against it.
+
+name: autopilot gate
+
+on:
+  pull_request:
+    branches: ["{{pipeline.base}}"]   # the integration branch phase PRs target — MUST include base
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # ── TOOLCHAIN SETUP (you add this) ───────────────────────────────────────
+      # e.g.
+      #   - uses: actions/setup-node@v4
+      #     with: { node-version: 20, cache: pnpm }
+      #   - uses: actions/setup-go@v5
+      #     with: { go-version: stable }
+      # ─────────────────────────────────────────────────────────────────────────
+
+      # ── GATE STEPS — one per non-empty profile command; drop the rest ─────────
+      - name: infra
+        run: {{commands.infra_up}}          # if set; brings up test dependencies
+      - name: format
+        run: {{commands.format_check}}
+      - name: lint
+        run: {{commands.lint}}
+      - name: build
+        run: {{commands.build}}
+      - name: test
+        run: {{commands.test}}
+      - name: integration
+        run: {{commands.test_integration}}  # if set
+      - name: audit
+        run: {{commands.audit}}             # if set

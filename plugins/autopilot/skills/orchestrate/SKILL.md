@@ -8,7 +8,8 @@ description: >-
   Discovers which phase is next from git markers (no conversation memory needed, so it's resumable
   forever), runs one phase per firing, and in pr_ci mode branches -> opens a PR -> watches GitHub CI ->
   runs a bounded fix-loop -> squash-merges into the integration branch. Stack-agnostic; the only hard
-  dependency is a GitHub repo with CI. Trigger it whenever a repo has .autopilot/pipeline.yml and the
+  dependency is a GitHub repo whose CI runs on PRs into the base branch (autopilot:detect verifies this
+  and scaffolds a gate workflow if it is missing). Trigger it whenever a repo has .autopilot/pipeline.yml and the
   user wants progress without babysitting.
 ---
 
@@ -76,7 +77,9 @@ the current phase entry. The durable tier carries everything else as compact sum
   skipped/ignored tests to force a pass.
 - `trunk` is **never** merged autonomously — a human merges the final integration PR.
 - **Never force-push** to `base` or `trunk`. Fix-loops push only to the phase branch.
-- The agent never self-certifies: in pr_ci, remote CI is the merge authority.
+- The agent never self-certifies: in pr_ci, remote CI is the merge authority — and a PR that ran ZERO
+  required checks is *skipped*, never green. Never merge a check-less PR (that is self-certification by
+  another name). Base CI coverage is a hard prereq for exactly this reason.
 - Load only the current phase's slice; the durable tier carries the rest.
 
 ## Termination

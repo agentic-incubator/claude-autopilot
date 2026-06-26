@@ -228,9 +228,25 @@ Commands are thin wrappers — the real logic lives in four skills (`plan`, `det
 | You'll need | When |
 |---|---|
 | A git repo + GitHub remote, with `gh` logged in (push/PR/merge) | required for `pr_ci` (autonomous) mode |
-| CI that runs your checks on the `base` branch | required for `pr_ci` mode |
+| CI that runs your checks on the `base` branch | required for `pr_ci` mode — **autopilot sets this up for you if you don't have it** (see below) |
 | The `/loop` skill | for hands-off, long-horizon runs |
 | `ruflo` / `agentic-qe` (`aqe`) | ✨ **optional** power-ups — absence degrades gracefully |
+
+### 🤖 "I don't have any CI / GitHub Actions set up." — That's fine.
+
+Autonomous (`pr_ci`) mode lets GitHub run your tests on each phase's pull request and only merges when
+they're green. So it needs CI. **You don't have to set that up yourself** — during
+`/autopilot-init` (or `/autopilot-detect`), if autopilot sees no CI on your branch, it **stops and asks**,
+and offers to do it for you:
+
+- 🛠️ **"Set up CI for me"** — autopilot writes a ready-to-go GitHub Actions workflow from the same
+  build/test commands it just detected. You only add one line: **your language's setup step** (e.g.
+  Node, Go, Python) — or just tell autopilot your language and it fills it in. ✅
+- 🧍 **"I'll review each phase myself"** — switch to `reviewed` mode and skip CI entirely. Autopilot runs
+  the checks **locally** and stops after each phase for you to look. Great for trying things out.
+
+Either way, **autopilot will never merge a PR that wasn't actually tested.** If checks somehow didn't run,
+it stops and tells you exactly what to do — it never quietly waves work through. 🛡️
 
 👉 `reviewed` mode works with **just a local git repo** — perfect for trying it out before you wire up
 GitHub. And remember: `trunk` (your default branch, usually `main`) is *never* merged autonomously. A
@@ -246,7 +262,7 @@ plugins/autopilot/
   .claude-plugin/plugin.json
   skills/{plan,detect,run-phase,orchestrate}/SKILL.md
   commands/autopilot-{init,plan,detect,run,status}.md
-  templates/{pipeline.yml,profile.yml,gate.md.tmpl}
+  templates/{pipeline.yml,profile.yml,gate.md.tmpl,ci-gate.yml.tmpl}
 ```
 
 Curious how the machinery works under the hood? See

@@ -46,6 +46,10 @@ ci:
   # When true, "all required PR checks green" is the ONLY merge gate in pr_ci mode —
   # the agent does not re-run the local gate before merging because CI already proved it.
   ci_is_merge_authority: true
+  # Does CI actually fire on PRs targeting `base`? `detect` sets this by reading workflow `on:` triggers.
+  # Only "covered" is safe for pr_ci; "trunk-only"/"none" mean phase PRs run no checks (a vacuous green),
+  # so detect scaffolds .github/workflows/autopilot-gate.yml or steers you to reviewed mode first.
+  base_coverage: covered          # covered | trunk-only | none
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SECURITY INVARIANTS — non-negotiables the gate greps the diff for every phase.

@@ -1,6 +1,6 @@
 {
   "name": "autopilot",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Drive any complex feature to completion across fresh contexts: scope a spec into a phased plan, implement each phase under a blocking quality gate (TDD), and ship via GitHub PR -> CI -> squash-merge. Durable state lives in git markers, so it is resumable forever and works for any language, framework, or tech stack.",
   "author": {
     "name": "Chris Phillipson"

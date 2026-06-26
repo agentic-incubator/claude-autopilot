@@ -39,8 +39,16 @@ Also detect:
 - **Integration tests** — a separate target/tag (`test-integration`, build tags, a compose file) and
   whatever brings their infra up (`infra_up`: `docker compose up -d`, `make docker-up`).
 - **Frontend tests** — only if there's a separate UI package.
-- **CI** — confirm `.github/workflows/` exists and runs on the intended `base` branch (pr_ci needs
-  this). Note the required check names if discoverable.
+- **CI** — for `pr_ci` mode, it is not enough that `.github/workflows/` exists; CI must actually fire on
+  PRs **targeting `base`**. Read each workflow's `on:` triggers and classify base coverage into one of:
+  - **covered** — an `on: pull_request` with no `branches:` filter, or one whose filter includes `base`.
+  - **trunk-only** — triggers are scoped to `trunk` (e.g. `pull_request: branches: [main]`, or `push`-only).
+    A phase PR into `base` would run NOTHING, so "all checks green" is vacuously true — the silent
+    self-certification this whole design forbids.
+  - **none** — no workflows at all.
+
+  Record the verdict and the required check names (if discoverable) under `ci:`. Only **covered** is safe
+  for `pr_ci`; **trunk-only** and **none** trigger the remediation step below.
 - **Design corpus** — discover where the authoritative docs live and record them in `references:`
   (prd, plan, adr_dir, ddd_dir, extra). Look for `docs/specs`, `docs/architecture/adr`,
   `docs/architecture/ddd`, `docs/prd`/`PRD*`, RFCs, threat models. These let `plan` decompose with full
@@ -73,9 +81,14 @@ command -v ruflo aqe 2>/dev/null                          # global scope
 ls -d .ruflo .agentic-qe .claude 2>/dev/null              # project scope
 ruflo --version 2>/dev/null; aqe --version 2>/dev/null
 
-# CI (pr_ci mode needs this)
-ls .github/workflows/*.yml 2>/dev/null && gh auth status 2>&1 | head -3
+# CI (pr_ci mode needs this) — does anything run on PRs into <base>?
+ls .github/workflows/*.yml .github/workflows/*.yaml 2>/dev/null && gh auth status 2>&1 | head -3
+# Inspect triggers: an unfiltered `pull_request` covers any base; a `branches:` filter must list <base>.
+grep -nE 'pull_request|push|branches' .github/workflows/*.y*ml 2>/dev/null
 ```
+
+Read the `on:` block, don't just grep for the words — a `pull_request:` with a `branches:` filter that
+omits `<base>` is **trunk-only**, not covered.
 
 Map results into `profile.yml`: a found `make test` target → `commands.test: "make test"`; `ruflo` on
 PATH → `accelerators.ruflo: { available: true, scope: "global" }`; a `.ruflo/` dir → `scope: "project"`;
@@ -90,6 +103,41 @@ explicitly ask them to confirm or correct each, especially `test`, `build`, and 
 you couldn't detect (left empty = skipped) and ask whether that's intended. Use the AskUserQuestion
 tool for the high-stakes ones if it helps them react quickly. Only write the file after they've signed
 off.
+
+## Remediate missing base CI (pr_ci only)
+
+Only runs when `autonomy: pr_ci` AND base coverage came back **trunk-only** or **none**. `reviewed` mode
+uses the local gate as authority, so it needs nothing here. When the gap exists, **stop and tell the user
+in plain words** — never silently proceed into a mode whose merge authority won't run. Assume the reader
+may be new to CI; lead with the consequence, not the jargon.
+
+Say it like this (adapt the specifics):
+
+> ⚠️ **Autonomous (`pr_ci`) mode needs GitHub to run your tests on each phase's pull request — and right
+> now it won't.** {none → "This repo has no GitHub Actions workflow at all." | trunk-only → "Your CI only
+> runs on `main`, but autopilot opens phase PRs into `<base>`, so nothing would test them."} Without that,
+> autopilot can't trust a PR enough to merge it. Here's how to fix it — pick one:
+
+Then offer the choice with **AskUserQuestion**, using these plain labels (recommended first):
+
+1. **"Set up CI for me (recommended)"** — Scaffold `.github/workflows/autopilot-gate.yml` from
+   `templates/ci-gate.yml.tmpl`, resolving `{{commands.*}}` from the profile and `{{pipeline.base}}` as the
+   PR target. It builds real, base-scoped CI from the commands the user just confirmed — nothing
+   stack-specific is invented. Commit it on its own branch/commit so they can read it first. **Then tell
+   them the one thing they must do:** "I've added the workflow, but I left the toolchain setup blank
+   because I can't know your language — open `.github/workflows/autopilot-gate.yml` and add your setup step
+   (e.g. `actions/setup-node`), or tell me your language and I'll fill it in."
+2. **"Add my base branch to the existing CI"** — Only offer for **trunk-only**: add `<base>` to the
+   workflow's `pull_request.branches` filter (a one-line edit). Show the exact diff and ask before saving.
+3. **"Just review each phase yourself (no CI needed)"** — Switch `autonomy: reviewed` in `pipeline.yml`.
+   Zero touch to `.github/`; the local gate becomes the authority and the user inspects each phase. The
+   safe fallback if they don't want autopilot writing CI.
+
+After acting, state the result and the next command in one line (e.g. "✅ CI workflow added on branch
+`add-autopilot-ci` — review it, merge it, then run `/autopilot-run`."). Do NOT leave `pr_ci` selected with
+**none**/**trunk-only** coverage unremediated: the orchestrate STEP D guard will refuse to merge a
+check-less PR, so the loop would just stall at phase 0. Resolving it here is the difference between "it
+works" and "it silently does nothing."
 
 ## Write
 

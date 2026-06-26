@@ -10,7 +10,11 @@ only ever affects `base`.
 ## Prerequisites (hard)
 
 - `gh auth status` authenticated with push + PR + merge rights on the remote.
-- CI runs on `base` (GitHub Actions or equivalent that reports required checks on PRs).
+- CI **actually runs on PRs targeting `base`** — not merely present in `.github/workflows/`. A workflow
+  scoped `on: pull_request: branches: [main]` (or `push`-only) fires NOTHING for a PR into `develop`,
+  which makes "all checks green" vacuously true. `detect` must have verified base coverage (and, if it
+  was missing, scaffolded an autopilot gate workflow or steered to `reviewed`). If you reach this mode
+  and a phase PR shows zero checks, that is the gap — STOP at the STEP D guard, do not merge.
 - `profile.ci.ci_is_merge_authority: true` — required PR checks green is the ONLY merge gate.
 - Policy from `pipeline.yml`: `fix_budget` CI-fix iterations per PR, then STOP + handoff (PR left open).
 
@@ -74,7 +78,15 @@ A = count of `fix(autopilot:<feature_id>): ci attempt` commits on this branch
     (git log <base>..HEAD --grep "ci attempt" --oneline | wc -l)  — the durable attempt counter.
 1. WAIT FOR CI in the background: gh pr checks <pr> --watch --fail-fast.
    Long-running; the harness re-invokes you on exit. Do NOT busy-poll.
-2. On exit:
+2. On exit, FIRST assert checks actually exist (the anti-vacuous-green guard):
+   `gh pr checks <pr>` lists ZERO checks (or "no checks reported") →
+       CI did not run on this PR. This is SKIPPED, not GREEN — never a pass (invariants #2/#3).
+       STOP THE LOOP. Leave the PR OPEN. Do NOT merge. Report it to the user in plain words + the fix:
+       "⛔ Stopped: GitHub ran no checks on PR <url> (into `<base>`), so I can't safely merge it —
+        autonomous mode needs CI on your phase PRs and this repo doesn't have it yet. Two ways forward:
+        (1) run `/autopilot-detect` and pick **Set up CI for me**, or (2) set `autonomy: reviewed` in
+        `.autopilot/pipeline.yml` to review each phase yourself. I've left PR <url> open." END.
+   Otherwise classify the (non-empty) result:
    - ALL REQUIRED CHECKS GREEN →
        gh pr merge <pr> --squash --delete-branch
          (squash subject = "feat(autopilot:<feature_id>): phase N complete — gate PASSED").
@@ -114,4 +126,7 @@ A = count of `fix(autopilot:<feature_id>): ci attempt` commits on this branch
 - One phase = one branch = one PR = one squash-merge marker on `base`.
 - A phase advances ONLY after its PR is green and merged into `base`. Never merge a red or
   required-missing PR.
+- ZERO checks on a phase PR is SKIPPED, never green. A PR that ran no required checks must never be
+  merged — that would be the agent self-certifying. This is the load-bearing reason base CI coverage is
+  a hard prereq, not a nicety.
 - State = `base` merge markers + open-PR list (+ ruflo memory) — re-derived every firing, never assumed.

@@ -58,6 +58,12 @@ the agent's self-assessment. Two rules make this safe:
 In `pr_ci` mode the merge authority moves one step further out: required GitHub CI checks, not the local
 gate, decide a merge. The agent diagnoses and fixes within a bounded `fix_budget`, then hands off.
 
+This only works if CI actually runs on the phase PRs. `detect` verifies that the repo's CI fires on PRs
+into `base` and — if it's missing (no workflow, or one scoped only to `trunk`) — offers to scaffold a
+base-targeted gate workflow from the detected commands, or to fall back to `reviewed` mode. As a backstop,
+the loop treats a PR with **zero** required checks as *skipped*, never green: it refuses to merge and
+hands off. A check-less merge would be self-certification, which rule 1 above forbids.
+
 ## Accelerators are optional by design
 
 `ruflo` (swarm + cross-session memory) and `agentic-qe` (mutation/pentest/chaos/coverage) make phases

@@ -24,6 +24,7 @@ plugins/autopilot/
     run-phase/references/{gate,accelerators}.md          # progressive disclosure
     orchestrate/references/{mode-pr-ci,mode-reviewed}.md
   templates/{pipeline.yml,profile.yml,gate.md.tmpl}     # scaffolded into a target repo's .autopilot/
+  templates/ci-gate.yml.tmpl                            # scaffolded to .github/workflows/ when base CI is missing
   docs/WORKFLOW.md
 README.md   LICENSE (MIT)
 ```
