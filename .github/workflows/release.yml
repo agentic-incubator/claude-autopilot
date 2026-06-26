@@ -27,6 +27,6 @@ jobs:
       # `repo` scope, or fine-grained with Contents + Pull requests: write) as the
       # RELEASE_PLEASE_TOKEN repo secret. The expression falls back to GITHUB_TOKEN so
       # the workflow still parses if the secret is absent (it just won't open the PR).
-      - uses: googleapis/release-please-action@v4
+      - uses: googleapis/release-please-action@v5
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}

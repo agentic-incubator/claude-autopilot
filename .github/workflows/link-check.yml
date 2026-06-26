@@ -21,10 +21,10 @@ jobs:
       contents: read
       issues: write # for the optional issue-creation step on scheduled runs
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Restore lychee cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .lycheecache
           key: lychee-${{ github.sha }}
@@ -48,7 +48,7 @@ jobs:
 
       - name: Create issue on broken links (scheduled runs only)
         if: github.event_name == 'schedule' && env.lychee_exit_code != '0'
-        uses: peter-evans/create-issue-from-file@v5
+        uses: peter-evans/create-issue-from-file@v6
         with:
           title: "Broken links detected by lychee"
           content-filepath: ./lychee/out.md
