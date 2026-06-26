@@ -1,0 +1,17 @@
+{
+  "name": "claude-autopilot",
+  "owner": {
+    "name": "Chris Phillipson"
+  },
+  "metadata": {
+    "description": "Autonomous, stack-agnostic feature pipeline for Claude Code.",
+    "version": "0.2.0"
+  },
+  "plugins": [
+    {
+      "name": "autopilot",
+      "source": "./plugins/autopilot",
+      "description": "Drive any complex feature to completion across fresh contexts: scope a spec into a phased plan, implement each phase under a blocking quality gate (TDD), and ship via GitHub PR -> CI -> squash-merge. Durable state lives in git markers, so it is resumable forever and works for any language, framework, or tech stack."
+    }
+  ]
+}

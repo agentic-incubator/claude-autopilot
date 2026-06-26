@@ -1,0 +1,24 @@
+# Ruflo / claude-flow / aqe generated local state (NOT part of the plugin).
+# The marketplace plugin lives in plugins/autopilot/ and .claude-plugin/.
+.claude/
+.claude-flow/
+.swarm/
+.agentic-qe/
+.mcp.json
+ruvector.db
+*.db
+
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store

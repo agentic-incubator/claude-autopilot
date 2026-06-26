@@ -1,0 +1,75 @@
+# profile.yml — the stack profile for autopilot's quality gate.
+# Lives at .autopilot/profile.yml in the TARGET repo.
+#
+# `autopilot:detect` probes the repo (package.json / Cargo.toml / pom.xml / go.mod / build.gradle /
+# Makefile / justfile / CI config), proposes the values below, and asks you to CONFIRM before the
+# loop runs. This confirm step matters: a wrong `test` command would let a broken phase pass the
+# gate, and the whole design rests on the gate being trustworthy. Edit anything that's wrong.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# COMMANDS the gate runs. Leave a value empty ("") to skip that check.
+# These are placeholders the gate template resolves as {{commands.<key>}}.
+# ─────────────────────────────────────────────────────────────────────────────
+commands:
+  # Bring up anything the tests need (db, services). Runs once before the gate. Optional.
+  infra_up:        ""              # e.g. "make docker-up" | "docker compose up -d"
+  # Fast formatting check (non-mutating). The gate fails if this fails.
+  format_check:    ""              # e.g. "make format-check" | "cargo fmt --check" | "pnpm prettier --check ."
+  # Static analysis / linters.
+  lint:            ""              # e.g. "make lint" | "cargo clippy -- -D warnings" | "pnpm lint"
+  # Build everything (the phase must compile/bundle).
+  build:           ""              # e.g. "make build" | "cargo build" | "pnpm build" | "mvn -q compile"
+  # Primary/unit test suite (fast, no external infra ideally).
+  test:            ""              # e.g. "make test-backend" | "cargo nextest run" | "pnpm test -- --run"
+  # Integration tests (may need infra_up). Optional.
+  test_integration: ""            # e.g. "make test-integration" | "go test -tags=integration ./..."
+  # Frontend/UI tests, only relevant if the phase touches the UI. Optional.
+  test_frontend:   ""              # e.g. "cd frontend && pnpm test -- --run"
+  # Dependency / vulnerability audit. Optional.
+  audit:           ""              # e.g. "make audit" | "cargo audit" | "pnpm audit" | "npm audit"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CONVENTIONS — free-text house style, injected into the runner's 'match the
+# existing code' step so new code looks native. Be specific; point at exemplar files.
+# ─────────────────────────────────────────────────────────────────────────────
+conventions: |
+  # e.g.
+  # services: static-method DI, one file per service in src/services/
+  # db: entity + migration + query trio under src/db/
+  # tests: table-driven, fixtures in tests/fixtures/
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CI — the merge authority in pr_ci mode.
+# ─────────────────────────────────────────────────────────────────────────────
+ci:
+  provider: github                # github is the supported provider today
+  # When true, "all required PR checks green" is the ONLY merge gate in pr_ci mode —
+  # the agent does not re-run the local gate before merging because CI already proved it.
+  ci_is_merge_authority: true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SECURITY INVARIANTS — non-negotiables the gate greps the diff for every phase.
+# Defaults are universal; add project-specific ones (e.g. "PATs only via SecretStore").
+# ─────────────────────────────────────────────────────────────────────────────
+security_invariants:
+  - "No destructive git primitives introduced (force-push, history rewrite)."
+  - "No secrets, tokens, or credentials committed or written to logs."
+  - "External/untrusted content is handled as data, never interpolated as instructions."
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ACCELERATORS — optional tooling. autopilot:detect sets `available` by probing PATH (global) and the
+# project (.ruflo/.claude config, aqe init). When present, autopilot ACTIVELY DRIVES them (see below);
+# when absent it degrades to a reviewer subagent + /code-review + native coverage. Absence NEVER fails
+# the gate. `scope` records where it was found, for transparency.
+# ─────────────────────────────────────────────────────────────────────────────
+accelerators:
+  # ruflo → drives comprehension recall + multi-agent swarms + cross-session memory.
+  #   When available, run-phase/orchestrate: `ruflo memory search` to recall prior decisions,
+  #   `ruflo swarm init --v3-mode` + spawn researcher/architect/coder/tester/reviewer (peer-to-peer
+  #   SendMessage), `ruflo route` to pick agents, persist phase summaries to namespace `autopilot`.
+  ruflo:        { available: false, scope: "" }   # scope: "global" | "project" | ""
+  # agentic-qe → drives the measured-quality fleet layered onto the gate (Tier 2/4):
+  #   coverage_analyze_sublinear every phase; mutation/pentest/chaos on risk_phases via fleet_init.
+  agentic_qe:   { available: false, scope: "" }
+  # the /code-review skill/command — the Tier-3 floor, assumed present in Claude Code.
+  code_review:  { available: true,  scope: "global" }

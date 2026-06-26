@@ -1,0 +1,47 @@
+# Quality Gate — {{pipeline.feature_id}} · phase {{phase.id}} ({{pipeline.goal}})
+#
+# This is the blocking gate the runner executes. {{commands.*}} resolve from profile.yml;
+# {{phase.*}} from pipeline.yml. A check with an empty command is SKIPPED (and reported as
+# skipped, never silently passed). The gate is 100%-green-or-it-does-not-advance: the agent's
+# own claim of success is never trusted — these commands are the verifier.
+
+## Tier 1 — Functional (every phase)
+- [ ] infra:        {{commands.infra_up}}          # if set; brings up test dependencies
+- [ ] format:       {{commands.format_check}}
+- [ ] lint:         {{commands.lint}}
+- [ ] build:        {{commands.build}}
+- [ ] test:         {{commands.test}}
+- [ ] integration:  {{commands.test_integration}}  # if set
+- [ ] frontend:     {{commands.test_frontend}}     # only if this phase touched the UI
+- [ ] audit:        {{commands.audit}}             # if set
+- [ ] No pre-existing test was deleted, skipped, or ignored to force a pass (diff-check the tests).
+- [ ] Diff greps clean for each security invariant in profile.yml.
+
+## Tier 2 — Definition of Done (this phase)
+For each line in {{phase.definition_of_done}}, produce evidence:
+- `cmd:` lines   → run the command, paste the passing output.
+- `grep:` lines  → run the grep, show it matches (or is absent, for grep:absent:).
+- `prose:` lines → cite the file:line where the behaviour is realized.
+Tick every box. An unticked DoD line = gate FAILED.
+
+## Tier 3 — Adversarial review (every phase)
+- [ ] Spawn a reviewer subagent to hunt gaps, untested branches, and silent shortcuts.
+      Resolve each finding or record why it is out of scope.
+- [ ] Run /code-review on the diff; address correctness findings.
+
+## Tier 4 — Heavy passes (ONLY if phase.id is in pipeline.risk_phases AND the accelerator exists)
+- [ ] mutation:  agentic-qe mutation tester on new core logic → score ≥ threshold.
+- [ ] security:  agentic-qe pentest validator on this phase's attack surface ("No Exploit, No Report").
+- [ ] chaos:     agentic-qe chaos engineer on fault paths → must degrade to a clean handoff.
+If the accelerator is absent, SKIP and note it — do not fail. Tier 3 is the floor everywhere.
+
+## Verdict
+- ALL applicable boxes green  → gate PASSED. Commit the feature-scoped marker
+  `(autopilot:{{pipeline.feature_id}}): phase {{phase.id}} complete — gate PASSED`; persist the phase
+  summary; append one JSONL line to `.autopilot/runs/{{pipeline.feature_id}}.jsonl`.
+- ANY applicable box red      → gate FAILED. Report which check + its output. Leave work as-is. Append a
+  `"verdict":"FAILED"` JSONL line to `.autopilot/runs/{{pipeline.feature_id}}.jsonl`. STOP.
+
+Every firing — pass or fail — logs exactly one ledger line, so the run is fully replayable from disk
+(see `run-phase` references/gate.md for the schema). The ledger is the human-readable companion to the
+git markers; the markers remain the authority for "what phase is next."
