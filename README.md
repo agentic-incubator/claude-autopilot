@@ -1,5 +1,9 @@
 # 🛸 claude-autopilot
 
+[![CI](https://github.com/agentic-incubator/claude-autopilot/actions/workflows/ci.yml/badge.svg)](https://github.com/agentic-incubator/claude-autopilot/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/agentic-incubator/claude-autopilot)](https://github.com/agentic-incubator/claude-autopilot/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 **Point Claude Code at a big feature. Walk away. Come back to shipped, tested code.**
 
 claude-autopilot is an autonomous, **stack-agnostic feature pipeline** for
