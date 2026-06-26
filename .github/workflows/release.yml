@@ -1,0 +1,26 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    name: Maintain release PR
+    runs-on: ubuntu-latest
+    steps:
+      # Reads release-please-config.json + .release-please-manifest.json.
+      # On a normal push: opens/updates the "chore: release X.Y.Z" PR that bumps
+      # package.json, plugin.json, and marketplace.json and regenerates CHANGELOG.md.
+      # When that PR is merged: creates the vX.Y.Z tag and the GitHub Release.
+      - uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}

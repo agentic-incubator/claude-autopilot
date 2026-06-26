@@ -8,7 +8,7 @@ the exact commands and what they do for you. New to the jargon? Keep
 
 ## 1. 🧑‍🎨 The vibe-coder shipping a real feature
 
-> *"I built a to-do app and now I want real user accounts. I've never opened a pull request."*
+> _"I built a to-do app and now I want real user accounts. I've never opened a pull request."_
 
 ```
 /autopilot-init "Add email/password auth with sessions and a logout button (spec: AUTH.md)"
@@ -24,16 +24,16 @@ through in full. 🌿
 
 ## 2. 🏗️ The big, multi-week project with lots of design docs
 
-> *"Migrate our payments from the legacy gateway to the new one — without one giant, risky change."*
+> _"Migrate our payments from the legacy gateway to the new one — without one giant, risky change."_
 
 Big features usually come with a folder of background docs — a spec, maybe a product brief, and notes
-your team wrote about *how* things should be built. Two common kinds (you don't need to know these
+your team wrote about _how_ things should be built. Two common kinds (you don't need to know these
 terms — autopilot handles them either way):
 
 - 📐 **ADR** ("Architecture Decision Record") — a short note recording a decision and why, e.g.
-  *"every payment call uses an idempotency key."* A rule the build must follow.
+  _"every payment call uses an idempotency key."_ A rule the build must follow.
 - 🧩 **DDD docs** ("Domain-Driven Design") — your shared vocabulary and building blocks, e.g. what an
-  *Invoice* or a *Charge* means and how they relate.
+  _Invoice_ or a _Charge_ means and how they relate.
 
 **The point: if you have design docs, autopilot reads them so every phase respects them — you just
 point it at the folder.**
@@ -46,7 +46,7 @@ point it at the folder.**
 
 autopilot scans your project for design docs and lists what it found in its settings file
 (`.autopilot/pipeline.yml`). It then breaks the work into small, shippable **phases**, and on each
-phase records *which* design docs that phase must respect — so later, each phase reads only its own
+phase records _which_ design docs that phase must respect — so later, each phase reads only its own
 slice, never the whole stack. It shows you the phase list; skim it and fix anything that looks off.
 When you're ready to let it run hands-off, change one line to `autonomy: pr_ci`.
 
@@ -56,7 +56,7 @@ When you're ready to let it run hands-off, change one line to `autonomy: pr_ci`.
 /loop Invoke the autopilot:orchestrate skill — run the next phase, then stop.
 ```
 
-Read this as: *"do the next phase, then start fresh and do the one after that, and keep going."* Each
+Read this as: _"do the next phase, then start fresh and do the one after that, and keep going."_ Each
 phase becomes its own **pull request** (a reviewable proposal on GitHub) with its own green tests
 before it merges — no single giant change. Because it works one phase at a time with a clean start
 each time, even a project with a dozen design docs never overwhelms it. Full details:
@@ -75,7 +75,7 @@ Monday — it picks up the next unfinished phase automatically. 🗓️
 
 ## 3. 🧪 The quality-first team (with the power-ups on)
 
-> *"Our coverage numbers lie. I want tests that actually catch regressions."*
+> _"Our coverage numbers lie. I want tests that actually catch regressions."_
 
 ```
 # with the optional ruflo + agentic-qe tools installed, autopilot auto-detects them
@@ -85,7 +85,7 @@ Monday — it picks up the next unfinished phase automatically. 🗓️
 ```
 
 With the optional [power-ups](power-ups.md) installed, the gate won't go green until the test suite
-*demonstrably* catches injected bugs — not just runs. Without them, autopilot still runs its standard
+_demonstrably_ catches injected bugs — not just runs. Without them, autopilot still runs its standard
 gate; the power-ups only ever add depth, never block you. 💪
 
 ---

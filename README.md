@@ -5,7 +5,7 @@
 claude-autopilot is an autonomous, **stack-agnostic feature pipeline** for
 [Claude Code](https://claude.com/claude-code) — packaged as a one-command install. You give it a
 goal and a spec; it breaks the work into small phases, builds each one test-first behind a quality
-gate that *can't be faked*, and ships them through GitHub pull request → automated checks → merge. It
+gate that _can't be faked_, and ships them through GitHub pull request → automated checks → merge. It
 works on **any language or framework**, and it's **resumable forever** — stop today, fire it again in
 three weeks, and it picks up exactly where it left off. 🔁
 
@@ -34,20 +34,20 @@ When you trust it, let it run a whole feature hands-off across many sessions →
 
 Start with whichever fits you:
 
-| Guide | Read it when |
-|---|---|
-| 🚀 [**Getting started**](docs/getting-started.md) | You want your first feature built, step by step, no jargon. |
-| 🧠 [**How it works + glossary**](docs/concepts.md) | You want to understand *why* it can be trusted — and what ADR, CI, PR, etc. mean. |
-| 💡 [**Use cases**](docs/use-cases.md) | You want real examples: a first feature, a multi-week migration, a quality-first team. |
-| 🌙 [**Autonomous runs**](docs/autonomous-runs.md) | You want it hands-off — opening pull requests, waiting for CI, merging across sessions. |
-| ⚡ [**Power-ups**](docs/power-ups.md) | You want faster runs and deeper, harder-to-fool checks (optional tools). |
-| 🔍 [**Design notes**](plugins/autopilot/docs/WORKFLOW.md) | You want the deep, diagrammed rationale under the hood. |
+| Guide                                                     | Read it when                                                                            |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| 🚀 [**Getting started**](docs/getting-started.md)         | You want your first feature built, step by step, no jargon.                             |
+| 🧠 [**How it works + glossary**](docs/concepts.md)        | You want to understand _why_ it can be trusted — and what ADR, CI, PR, etc. mean.       |
+| 💡 [**Use cases**](docs/use-cases.md)                     | You want real examples: a first feature, a multi-week migration, a quality-first team.  |
+| 🌙 [**Autonomous runs**](docs/autonomous-runs.md)         | You want it hands-off — opening pull requests, waiting for CI, merging across sessions. |
+| ⚡ [**Power-ups**](docs/power-ups.md)                     | You want faster runs and deeper, harder-to-fool checks (optional tools).                |
+| 🔍 [**Design notes**](plugins/autopilot/docs/WORKFLOW.md) | You want the deep, diagrammed rationale under the hood.                                 |
 
 ---
 
 ## 🤔 Why it exists
 
-AI coding assistants are amazing at the next 50 lines. They're *terrible* at the next 50 **steps.**
+AI coding assistants are amazing at the next 50 lines. They're _terrible_ at the next 50 **steps.**
 Ask one to "migrate us to the new auth system" and you get a confident burst of code, a few
 passing-ish tests, and then… drift. The context window fills up, the plan evaporates, and nobody
 remembers what "done" meant.
@@ -56,7 +56,7 @@ claude-autopilot fixes the part the chat window can't — **memory, discipline, 
 
 - 🧠 **It doesn't rely on memory.** The plan and progress live in your git history as durable
   markers, not in the conversation. The AI can forget everything and still know what's next.
-- ✅ **It can't lie about "done."** Every phase advances only when *machine-verified* checks pass. A
+- ✅ **It can't lie about "done."** Every phase advances only when _machine-verified_ checks pass. A
   skipped test is reported as skipped — never as a pass.
 - 🚢 **It actually ships.** Real branches, real pull requests, real CI — the workflow a senior
   engineer would use, run for you.
@@ -73,7 +73,7 @@ The how-and-why behind each of these is in [How it works](docs/concepts.md).
 /plugin install autopilot
 ```
 
-*(Developing locally? Add this repo's path as a local marketplace instead.)*
+_(Developing locally? Add this repo's path as a local marketplace instead.)_
 
 **Uninstall:**
 
@@ -89,13 +89,13 @@ stay put. 👌
 
 ## 🧰 Commands
 
-| Command | What it does |
-|---|---|
-| `/autopilot-init` | 🚀 Scope the feature into phases **+** detect your stack (plan → detect). |
-| `/autopilot-plan` | 📋 (Re)generate the phase plan only. |
-| `/autopilot-detect` | 🔎 (Re)detect + confirm your build/test/lint profile only. |
-| `/autopilot-run` | 🏃 Drive the next phase (or a named one). |
-| `/autopilot-status` | 📊 Show progress: done / next / in-flight pull request + CI. |
+| Command             | What it does                                                              |
+| ------------------- | ------------------------------------------------------------------------- |
+| `/autopilot-init`   | 🚀 Scope the feature into phases **+** detect your stack (plan → detect). |
+| `/autopilot-plan`   | 📋 (Re)generate the phase plan only.                                      |
+| `/autopilot-detect` | 🔎 (Re)detect + confirm your build/test/lint profile only.                |
+| `/autopilot-run`    | 🏃 Drive the next phase (or a named one).                                 |
+| `/autopilot-status` | 📊 Show progress: done / next / in-flight pull request + CI.              |
 
 Commands are thin wrappers — the real logic lives in four skills (`plan`, `detect`, `run-phase`,
 `orchestrate`), so Claude can also invoke them automatically when the moment fits. 🪄

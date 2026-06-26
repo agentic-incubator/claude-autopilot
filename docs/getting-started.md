@@ -32,8 +32,8 @@ Open Claude Code inside your project and run:
 /autopilot-init "Add email/password login with a logout button (spec: AUTH.md)"
 ```
 
-Read that command as: *"Get ready to build this feature; here's a one-line description, and the
-details are in the file `AUTH.md`."* The `spec:` part is optional — if you don't have a written spec
+Read that command as: _"Get ready to build this feature; here's a one-line description, and the
+details are in the file `AUTH.md`."_ The `spec:` part is optional — if you don't have a written spec
 yet, just describe the feature in the sentence and autopilot will ask you questions to fill the gaps.
 
 **What this does for you:** autopilot reads your description (and any docs you point it at), then
@@ -45,7 +45,7 @@ schema → signup → login → keep-you-signed-in → logout → wire up the bu
 ```
 
 It also takes a quick look at your project to figure out how to run your tests and build, and asks
-you to confirm it got that right. (Those test/build commands are what it uses later to *prove* each
+you to confirm it got that right. (Those test/build commands are what it uses later to _prove_ each
 phase works — so a few seconds confirming them here is worth it.)
 
 You end up with two small files in your project, under a new `.autopilot/` folder. You can read and
@@ -105,7 +105,7 @@ come back next week, run `/autopilot-status`, and pick up exactly where you left
 
 ## What's next
 
-- Curious *how* it never loses its place or fakes a result? → [Concepts & glossary](concepts.md)
+- Curious _how_ it never loses its place or fakes a result? → [Concepts & glossary](concepts.md)
 - Want it to run a whole feature unattended (open pull requests, wait for CI, merge)? →
   [Autonomous runs](autonomous-runs.md)
 - Want to see bigger, real-world examples? → [Use cases](use-cases.md)

@@ -1,0 +1,33 @@
+# lychee link-checker config — see https://github.com/lycheeverse/lychee
+# Relative links resolve against each markdown file's directory.
+
+# Cache results so repeated/CI runs are fast.
+cache = true
+max_cache_age = "2d"
+
+# Be a polite client and tolerate slow/rate-limited hosts.
+max_concurrency = 8
+timeout = 20
+max_retries = 2
+retry_wait_time = 2
+
+# Treat these as success — many hosts reject bots with these codes.
+accept = ["200..=299", "403", "429"]
+
+# Don't fail on links that only exist after scaffolding into a user's repo,
+# or on intentional placeholders/examples used in skill/template docs.
+exclude = [
+  "^https?://example\\.com",
+  "^https?://localhost",
+  "^https?://127\\.0\\.0\\.1",
+  # release-please writes CHANGELOG compare/release links pointing at the tag it
+  # creates on merge, so they 404 during the release PR window. Skip them.
+  "github\\.com/.+/compare/",
+  "github\\.com/.+/releases/tag/",
+]
+
+# Mailto and other non-http schemes aren't worth probing.
+include_mail = false
+
+# Don't descend into dependencies or tooling caches.
+exclude_path = ["node_modules", ".lycheecache"]

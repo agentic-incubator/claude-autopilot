@@ -6,6 +6,7 @@ green checks." Read this when running Step 5 of `run-phase`, or when a gate resu
 ## Rendering the template
 
 `templates/gate.md.tmpl` uses two namespaces:
+
 - `{{commands.*}}` from `.autopilot/profile.yml`
 - `{{phase.*}}` from the target entry in `.autopilot/pipeline.yml`
 
@@ -17,29 +18,30 @@ is the one failure mode that quietly erodes trust in the whole pipeline.
 
 Run in this order so cheap checks fail fast before expensive ones:
 
-| Check | Source | Notes |
-|---|---|---|
-| infra_up | profile | Optional. Bring up db/services the tests need. |
-| format_check | profile | Non-mutating. Fail = gate fail (don't auto-format and continue silently). |
-| lint | profile | Static analysis. |
-| build | profile | Must compile/bundle. |
-| test | profile | Primary suite. |
-| test_integration | profile | Optional; may depend on infra_up. |
-| test_frontend | profile | Only if this phase touched UI. |
-| audit | profile | Optional dependency/vuln scan. |
-| no-test-tampering | — | Diff-check: no pre-existing test deleted, `#[ignore]`'d, `.skip`'d, or commented out to pass. |
-| security invariants | profile | Grep the diff against each `security_invariants:` line. |
+| Check               | Source  | Notes                                                                                         |
+| ------------------- | ------- | --------------------------------------------------------------------------------------------- |
+| infra_up            | profile | Optional. Bring up db/services the tests need.                                                |
+| format_check        | profile | Non-mutating. Fail = gate fail (don't auto-format and continue silently).                     |
+| lint                | profile | Static analysis.                                                                              |
+| build               | profile | Must compile/bundle.                                                                          |
+| test                | profile | Primary suite.                                                                                |
+| test_integration    | profile | Optional; may depend on infra_up.                                                             |
+| test_frontend       | profile | Only if this phase touched UI.                                                                |
+| audit               | profile | Optional dependency/vuln scan.                                                                |
+| no-test-tampering   | —       | Diff-check: no pre-existing test deleted, `#[ignore]`'d, `.skip`'d, or commented out to pass. |
+| security invariants | profile | Grep the diff against each `security_invariants:` line.                                       |
 
 ## Tier 2 — Definition of Done (every phase)
 
 Each `definition_of_done:` line is a check, and the line's prefix says how to verify it:
+
 - `cmd: <command>` → run it, paste passing output.
 - `grep: <pattern>` → show the pattern is present.
 - `grep:absent: <pattern>` → show the pattern does not appear in the new code.
 - `prose: <claim>` → cite `file:line` where it's realized.
 
 Every line must be ticked with evidence. An unticked DoD line fails the gate even if Tier 1 is green —
-Tier 1 proves the project still works; Tier 2 proves *this phase* did what it promised.
+Tier 1 proves the project still works; Tier 2 proves _this phase_ did what it promised.
 
 ## Tier 3 — Adversarial review (every phase)
 
@@ -105,7 +107,7 @@ One JSON object per line, schema:
 
 - `verdict` — `"PASSED"` or `"FAILED"`. On FAILED, `failed` lists the red check names and `marker` is
   `null`.
-- `skipped` — checks reported skipped (empty command), so a reader sees what was *not* verified.
+- `skipped` — checks reported skipped (empty command), so a reader sees what was _not_ verified.
 - `ci_attempts` — count of `ci attempt` commits on the phase branch (pr_ci); `0` in reviewed mode.
 - `pr` — phase PR URL in pr_ci, else `null`.
 - `accelerators` — which were actually active this firing (`[]` on a vanilla run).

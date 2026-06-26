@@ -6,7 +6,7 @@ command. You never need anything else. 🆗
 
 But if you have two optional tools installed, autopilot **detects them automatically** and levels up —
 no configuration required. If they're not there, nothing breaks; that phase simply runs at the level
-below. Accelerators change *speed and depth*, never whether a phase passes.
+below. Accelerators change _speed and depth_, never whether a phase passes.
 
 ---
 
@@ -17,15 +17,15 @@ below. Accelerators change *speed and depth*, never whether a phase passes.
 [ruflo](https://github.com/ruvnet/ruflo) lets autopilot:
 
 - **Work a phase with a team of agents in parallel** instead of one at a time — phases finish faster.
-- **Remember across sessions** — lessons from phase 2 inform phase 9. The pipeline gets *smarter the
-  longer it runs* instead of starting cold every time.
+- **Remember across sessions** — lessons from phase 2 inform phase 9. The pipeline gets _smarter the
+  longer it runs_ instead of starting cold every time.
 
 ### 🔬 agentic-qe (`aqe`) — deeper proof
 
 [agentic-qe](https://github.com/proffesor-for-testing/agentic-qe) makes the quality gate harder to
 fool:
 
-- **Mutation testing** — deliberately introduces small bugs to check your tests actually *catch* them
+- **Mutation testing** — deliberately introduces small bugs to check your tests actually _catch_ them
   (not just run). It's the difference between "tests pass" and "tests are proven effective."
 - **Coverage analysis** — finds the parts of your code no test touches.
 - **Security and resilience passes** — applied to your riskier phases.
@@ -34,11 +34,11 @@ fool:
 
 ## Three tiers, each degrades gracefully
 
-| Tier | Setup | What you get |
-|---|---|---|
-| 🥉 **Vanilla** | Claude Code + git + `gh` | Always works. Every phase gated by a reviewer pass + automated code review. |
-| 🥈 **+ ruflo** | add ruflo | Faster (parallel agents) and remembers across sessions. |
-| 🥇 **+ agentic-qe** | add ruflo + aqe | Hardest to fool — mutation testing and resilience passes on risky phases. |
+| Tier                | Setup                    | What you get                                                                |
+| ------------------- | ------------------------ | --------------------------------------------------------------------------- |
+| 🥉 **Vanilla**      | Claude Code + git + `gh` | Always works. Every phase gated by a reviewer pass + automated code review. |
+| 🥈 **+ ruflo**      | add ruflo                | Faster (parallel agents) and remembers across sessions.                     |
+| 🥇 **+ agentic-qe** | add ruflo + aqe          | Hardest to fool — mutation testing and resilience passes on risky phases.   |
 
 If a tool isn't installed, that phase simply runs at the tier below. **Nothing ever blocks on an
 accelerator being present** — the vanilla floor runs everywhere, every time.

@@ -11,6 +11,9 @@ ruvector.db
 # Dependencies
 node_modules/
 
+# Tooling caches
+.lycheecache
+
 # Environment
 .env
 .env.local

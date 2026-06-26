@@ -1,0 +1,57 @@
+name: Link Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  # Re-check weekly so external link rot doesn't go unnoticed.
+  schedule:
+    - cron: "0 6 * * 1"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  links:
+    name: Validate markdown links with lychee
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write # for the optional issue-creation step on scheduled runs
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore lychee cache
+        uses: actions/cache@v4
+        with:
+          path: .lycheecache
+          key: lychee-${{ github.sha }}
+          restore-keys: |
+            lychee-
+
+      - name: Run lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          # Relative paths resolve against each markdown file's directory.
+          args: >-
+            --config lychee.toml
+            --no-progress
+            --verbose
+            './**/*.md'
+          # Fail PR/push runs on broken links; on scheduled runs just open an issue.
+          fail: ${{ github.event_name != 'schedule' }}
+          jobSummary: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create issue on broken links (scheduled runs only)
+        if: github.event_name == 'schedule' && env.lychee_exit_code != '0'
+        uses: peter-evans/create-issue-from-file@v5
+        with:
+          title: "Broken links detected by lychee"
+          content-filepath: ./lychee/out.md
+          labels: |
+            documentation
+            link-check

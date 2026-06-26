@@ -34,6 +34,7 @@ whole point of the checkpoint.
 ## Optimization pass (only when every phase is gated)
 
 When N is past the last phase:
+
 - If `accelerators.ruflo` is available, `ruflo analyze boundaries <src dir>` to find refactor seams
   across the new code; otherwise scan the diff of all phases yourself for duplication and dead seams.
 - Dedup, simplify, tighten hot paths. Run `/simplify` then `/code-review` on the result.

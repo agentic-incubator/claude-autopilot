@@ -21,6 +21,7 @@ with the `/loop` skill in self-paced mode (no interval) so each firing gets a cl
 what makes a 10-phase, multi-week feature finish without any single conversation holding it all.
 
 You operate in one of two modes, set by `autonomy:` in `.autopilot/pipeline.yml`:
+
 - **reviewed** — run one phase locally, land a `gate PASSED` marker, STOP for human inspection between
   phases. Lowest blast radius; a human sees every phase.
 - **pr_ci** — fire-and-forget. Each phase ships as a branch → PR → green CI → squash-merge into the
@@ -28,6 +29,7 @@ You operate in one of two modes, set by `autonomy:` in `.autopilot/pipeline.yml`
   `base → trunk` PR and stop for a human decision.
 
 Read the matching playbook in full before acting:
+
 - reviewed → `references/mode-reviewed.md`
 - pr_ci → `references/mode-pr-ci.md`
 
@@ -38,13 +40,13 @@ The two share the state model and invariants below.
 Never assume progress from memory — re-derive it every firing. This is why the loop survives context
 resets, interruptions, and weeks of wall-clock:
 
-| Tier | Holds | Mechanism |
-|---|---|---|
-| Durable | which phase is done (authority) | feature-scoped git `gate PASSED` markers — `(autopilot:<feature_id>): …` |
-| Durable | replayable per-firing history | `.autopilot/runs/<feature_id>.jsonl` session ledger (committed; works with no ruflo) |
-| Durable | decisions, gotchas (optional) | ruflo memory `autopilot` namespace, if available |
-| Per-phase working set | the active phase's slice + its conventions | read on demand at phase start, discarded after |
-| Ephemeral | one subagent's task | compact SendMessage results, never file dumps |
+| Tier                  | Holds                                      | Mechanism                                                                            |
+| --------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------ |
+| Durable               | which phase is done (authority)            | feature-scoped git `gate PASSED` markers — `(autopilot:<feature_id>): …`             |
+| Durable               | replayable per-firing history              | `.autopilot/runs/<feature_id>.jsonl` session ledger (committed; works with no ruflo) |
+| Durable               | decisions, gotchas (optional)              | ruflo memory `autopilot` namespace, if available                                     |
+| Per-phase working set | the active phase's slice + its conventions | read on demand at phase start, discarded after                                       |
+| Ephemeral             | one subagent's task                        | compact SendMessage results, never file dumps                                        |
 
 Markers are the **authority** for "what phase is next"; the ledger is the human-readable audit trail of
 how each phase got there. Both are scoped by `feature_id` so multiple features in one repo never
@@ -77,8 +79,8 @@ the current phase entry. The durable tier carries everything else as compact sum
   skipped/ignored tests to force a pass.
 - `trunk` is **never** merged autonomously — a human merges the final integration PR.
 - **Never force-push** to `base` or `trunk`. Fix-loops push only to the phase branch.
-- The agent never self-certifies: in pr_ci, remote CI is the merge authority — and a PR that ran ZERO
-  required checks is *skipped*, never green. Never merge a check-less PR (that is self-certification by
+- The agent never self-certifies: in pr*ci, remote CI is the merge authority — and a PR that ran ZERO
+  required checks is \_skipped*, never green. Never merge a check-less PR (that is self-certification by
   another name). Base CI coverage is a hard prereq for exactly this reason.
 - Load only the current phase's slice; the durable tier carries the rest.
 
