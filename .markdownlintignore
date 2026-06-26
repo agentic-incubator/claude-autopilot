@@ -1,3 +1,4 @@
 node_modules/
 .lycheecache
 plugins/autopilot/templates/
+CHANGELOG.md
