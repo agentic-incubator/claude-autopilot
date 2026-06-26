@@ -39,8 +39,8 @@ Load only what this phase needs — that's the memory contract that keeps long p
      language to use in names and boundaries),
    - the relevant section of `pipeline.references.prd` (acceptance intent) and any `extra:` doc the
      phase touches.
-   This is the comprehension contract: a phase honors the ADRs/domain model it's scoped to, and reads
-   only those slices so context stays small. If a phase names no slices, fall back to the spec section.
+     This is the comprehension contract: a phase honors the ADRs/domain model it's scoped to, and reads
+     only those slices so context stays small. If a phase names no slices, fall back to the spec section.
 
 If `.autopilot/` is missing, the pipeline was never initialized — tell the user to run
 `autopilot:plan` + `autopilot:detect` (or `/autopilot-init`) and stop.
@@ -48,6 +48,7 @@ If `.autopilot/` is missing, the pipeline was never initialized — tell the use
 ## Which phase?
 
 Determine the target phase in this order:
+
 - Explicitly given (user said "phase 3", or the orchestrator passed one) → use it.
 - Otherwise discover from git markers **scoped to this feature** (`feature_id` from `pipeline.yml`):
   the highest `feat(autopilot:<feature_id>): phase <N> complete — gate PASSED` commit is the last done
@@ -112,6 +113,7 @@ handle skipped checks. In short: Tier 1 functional + Tier 2 DoD + Tier 3 adversa
 phase; Tier 4 heavy passes run only when the phase id is in `risk_phases` AND the accelerator exists.
 
 Aggregate into one verdict:
+
 - **PASS** (every applicable check green) → Step 6.
 - **FAIL** → report exactly which check failed with its output, leave the work uncommitted (or as-is on
   the branch), persist the blocker if ruflo is available, **append a `"verdict":"FAILED"` ledger line**
@@ -120,6 +122,7 @@ Aggregate into one verdict:
 ## Step 6 — Mark done, log the session & STOP
 
 On PASS:
+
 - Append one line to `.autopilot/runs/<feature_id>.jsonl` — the session ledger (schema + field meanings
   in `references/gate.md`). This is the replayable record of the run; it works with no ruflo installed.
 - Commit `feat(autopilot:<feature_id>): phase <N> complete — gate PASSED`, **staging the new ledger line

@@ -79,28 +79,28 @@ Every run is reconstructable from the target repo alone — no conversation memo
 noted) no ruflo. Everything is scoped by `feature_id`, so running autopilot repeatedly in one repo keeps
 each feature's state cleanly separate.
 
-| Artifact | Where | Role |
-|---|---|---|
-| `gate PASSED` markers | git commits, `(autopilot:<feature_id>): phase N complete — gate PASSED` | **Authority** for "what phase is next" — re-derived by grep every firing |
-| Session ledger | `.autopilot/runs/<feature_id>.jsonl` (committed) | **Replayable history** — one JSON line per firing (phase · verdict · skipped · ci_attempts · PR · accelerators · timestamp), pass or fail. Works with no ruflo |
-| `pipeline.yml` / `profile.yml` | `.autopilot/` (committed) | The plan + stack profile — editable, re-runnable |
-| Branches / PRs (pr_ci) | GitHub: `autopilot/<feature_id>/phase-N`, the integration PR | In-flight resume points |
-| Phase summaries | ruflo memory `autopilot` namespace — **only if ruflo present** | Optional richer recall on later phases |
+| Artifact                       | Where                                                                   | Role                                                                                                                                                           |
+| ------------------------------ | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `gate PASSED` markers          | git commits, `(autopilot:<feature_id>): phase N complete — gate PASSED` | **Authority** for "what phase is next" — re-derived by grep every firing                                                                                       |
+| Session ledger                 | `.autopilot/runs/<feature_id>.jsonl` (committed)                        | **Replayable history** — one JSON line per firing (phase · verdict · skipped · ci_attempts · PR · accelerators · timestamp), pass or fail. Works with no ruflo |
+| `pipeline.yml` / `profile.yml` | `.autopilot/` (committed)                                               | The plan + stack profile — editable, re-runnable                                                                                                               |
+| Branches / PRs (pr_ci)         | GitHub: `autopilot/<feature_id>/phase-N`, the integration PR            | In-flight resume points                                                                                                                                        |
+| Phase summaries                | ruflo memory `autopilot` namespace — **only if ruflo present**          | Optional richer recall on later phases                                                                                                                         |
 
-The ledger is the human-readable companion to the markers: markers answer *where are we*, the ledger
-answers *how did each phase get there* — including FAILED attempts, which never leave a marker. To
+The ledger is the human-readable companion to the markers: markers answer _where are we_, the ledger
+answers _how did each phase get there_ — including FAILED attempts, which never leave a marker. To
 audit or replay a run, read `.autopilot/runs/<feature_id>.jsonl`; `/autopilot-status` summarizes it.
 
 ## Effort summary
 
-| Stage | Without accelerators (baseline) | With ruflo | With aqe |
-|---|---|---|---|
-| Plan | read corpus, decompose, write DoD | + memory recall of prior decisions | + `requirements_validate` makes DoD testable |
-| Detect | probe stack/corpus, confirm | (records ruflo scope) | (records aqe scope) |
-| Implement | TDD with focused subagents | hierarchical-mesh swarm, peer-to-peer | seed RED with `qe-test-architect` |
-| Gate T1–T3 | commands + reviewer subagent + /code-review | swarm reviewer | coverage_analyze_sublinear |
-| Gate T4 (risk_phases) | — (relies on T3 floor) | — | mutation · pentest · chaos |
-| Advance | git marker (+ optional PR/CI) | persist summary to memory | persist QE signals to memory |
+| Stage                 | Without accelerators (baseline)             | With ruflo                            | With aqe                                     |
+| --------------------- | ------------------------------------------- | ------------------------------------- | -------------------------------------------- |
+| Plan                  | read corpus, decompose, write DoD           | + memory recall of prior decisions    | + `requirements_validate` makes DoD testable |
+| Detect                | probe stack/corpus, confirm                 | (records ruflo scope)                 | (records aqe scope)                          |
+| Implement             | TDD with focused subagents                  | hierarchical-mesh swarm, peer-to-peer | seed RED with `qe-test-architect`            |
+| Gate T1–T3            | commands + reviewer subagent + /code-review | swarm reviewer                        | coverage_analyze_sublinear                   |
+| Gate T4 (risk_phases) | — (relies on T3 floor)                      | —                                     | mutation · pentest · chaos                   |
+| Advance               | git marker (+ optional PR/CI)               | persist summary to memory             | persist QE signals to memory                 |
 
 The invariant across every column: **a red gate never advances, and a missing accelerator never fails
 the gate** — accelerators change speed and depth, not the pass/fail meaning.

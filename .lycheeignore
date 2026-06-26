@@ -1,0 +1,2 @@
+# One regex per line. Links matching these are skipped by lychee.
+# Add flaky hosts or intentionally-unresolvable example URLs here.

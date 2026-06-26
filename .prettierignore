@@ -1,0 +1,12 @@
+# Lock files are managed by the package manager.
+pnpm-lock.yaml
+
+# Templates are scaffolded verbatim into a user's repo and contain {{...}}
+# placeholders and intentional formatting — do not reformat them.
+plugins/autopilot/templates/
+
+# Local tooling state (also git-ignored).
+.claude/
+.claude-flow/
+.swarm/
+.agentic-qe/

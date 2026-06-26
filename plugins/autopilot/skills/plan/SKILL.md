@@ -20,11 +20,13 @@ either stalls or merges something wrong. Spend the effort here; it's the cheapes
 ## What good output looks like
 
 A handful of **independently shippable** phases, ordered by dependency, where each phase:
+
 - moves the feature from one working state to the next (never leaves the repo broken),
 - names concrete deliverables (a module, an endpoint, a migration — not "improve X"),
 - has a Definition of Done every line of which a gate can **verify without judgment**.
 
 The DoD is the part that matters most. Prefer verifiable lines:
+
 - `cmd: <command that must succeed>` — e.g. `cmd: npm test -- payments` passes.
 - `grep: <pattern that must appear>` / `grep:absent: <pattern that must not>`.
 - `prose: <claim>` only when there's genuinely no command/grep for it — and keep it pointed at a

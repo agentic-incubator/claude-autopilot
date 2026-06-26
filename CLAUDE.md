@@ -34,12 +34,12 @@ Everything else in the working tree (`.claude/`, `.claude-flow/`, `.swarm/`, `.a
 
 ## The four skills
 
-| Skill | Job |
-|---|---|
-| `plan` | spec → phases, each with a machine-checkable Definition of Done |
-| `detect` | probe the target stack → confirm → write `.autopilot/profile.yml` |
-| `run-phase` | implement one phase + run the gate, then stop |
-| `orchestrate` | the long-horizon loop (`reviewed` / `pr_ci` modes) |
+| Skill         | Job                                                               |
+| ------------- | ----------------------------------------------------------------- |
+| `plan`        | spec → phases, each with a machine-checkable Definition of Done   |
+| `detect`      | probe the target stack → confirm → write `.autopilot/profile.yml` |
+| `run-phase`   | implement one phase + run the gate, then stop                     |
+| `orchestrate` | the long-horizon loop (`reviewed` / `pr_ci` modes)                |
 
 Commands are thin wrappers; the logic lives in the skills so Claude can also invoke them
 automatically when context fits. `run-phase` and `orchestrate` use progressive disclosure — the
@@ -52,7 +52,7 @@ These are the load-bearing ideas of the design. Edits that weaken them are bugs:
 1. **Git markers are the durable state.** "What's next" is re-derived from the repo (e.g.
    `grep "gate PASSED"`), never from conversation memory. One phase per fresh context.
 2. **The agent never self-certifies.** Advancement is gated on machine-verified checks. A skipped
-   check is reported as *skipped*, never as a pass; a red gate is never waved through.
+   check is reported as _skipped_, never as a pass; a red gate is never waved through.
 3. **In `pr_ci` mode, GitHub CI is the merge authority** — not the local gate. The agent fixes within
    a bounded `fix_budget`, then hands off.
 4. **Nothing stack-specific is hard-coded in the plugin.** Build/test/lint/audit commands,
@@ -73,15 +73,21 @@ These are the load-bearing ideas of the design. Edits that weaken them are bugs:
   comments self-explanatory, since the user edits these by hand.
 - Match the voice already in the skills: imperative, concrete, no filler.
 
-## Validation (no compiler — check by hand)
+## Validation
 
-After editing, verify:
-- `marketplace.json` and `plugin.json` are valid JSON and versions agree where they should.
-- Every command referenced in `README.md` has a matching `commands/*.md`, and every skill named has a
-  `skills/*/SKILL.md`.
-- Each `SKILL.md` has valid frontmatter with a `name` matching its directory and a `description`.
-- Bump `plugins/autopilot/.claude-plugin/plugin.json` `version` (and the marketplace `version` if the
-  release changes) on a user-visible change.
+These checks are automated and run in CI on every PR (see `.github/workflows/`). Run them
+locally before committing:
+
+- `pnpm run validate` — `scripts/validate-manifests.mjs` (plain Node, no install) checks that
+  the manifests are valid JSON, versions agree, every `README.md` command reference has a
+  matching `commands/*.md`, and every `skills/*/` directory has a `SKILL.md` whose frontmatter
+  `name` matches the directory and carries a `description`.
+- `pnpm run check` — `validate` + Prettier + markdownlint.
+- `pnpm run link-check` — verifies markdown links resolve (needs network).
+
+Still done by hand: bump `plugins/autopilot/.claude-plugin/plugin.json` `version` **and**
+`marketplace.json` `metadata.version` (keep them identical) on a user-visible change, and add a
+CHANGELOG entry. See `docs/maintainers.md` for the release checklist.
 
 ## Git
 

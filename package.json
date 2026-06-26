@@ -1,0 +1,30 @@
+{
+  "name": "claude-autopilot",
+  "version": "0.4.0",
+  "private": true,
+  "description": "Quality and validation tooling for the claude-autopilot marketplace. The deliverable is prompt content (skills, commands, templates); these scripts keep the manifests valid and the docs lint-clean.",
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "pnpm@11.0.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "validate": "node scripts/validate-manifests.mjs",
+    "format": "prettier --write \"**/*.md\" \"**/*.json\"",
+    "format:check": "prettier --check \"**/*.md\" \"**/*.json\"",
+    "lint": "markdownlint \"**/*.md\"",
+    "lint:fix": "markdownlint --fix \"**/*.md\"",
+    "link-check": "lychee --config lychee.toml --no-progress './**/*.md'",
+    "link-check:offline": "lychee --config lychee.toml --offline --no-progress './**/*.md'",
+    "check": "pnpm run validate && pnpm run format:check && pnpm run lint",
+    "check:all": "pnpm run check && pnpm run link-check:offline",
+    "fix": "pnpm run format && pnpm run lint:fix",
+    "audit": "pnpm audit --audit-level moderate",
+    "upgrade": "pnpm update --latest --interactive"
+  },
+  "devDependencies": {
+    "markdownlint-cli": "^0.45.0",
+    "prettier": "^3.7.4"
+  }
+}

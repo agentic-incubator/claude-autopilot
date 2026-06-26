@@ -5,7 +5,7 @@ Once you've watched autopilot build a few phases and you trust it, you can let i
 merges each finished phase — repeating until the whole feature is staged for your final sign-off. Go
 to sleep; wake up to merged work.
 
-New to terms like *pull request*, *CI*, *branch*, or *merge*? They're all decoded in the
+New to terms like _pull request_, _CI_, _branch_, or _merge_? They're all decoded in the
 [glossary](concepts.md#-glossary).
 
 ---
@@ -14,10 +14,10 @@ New to terms like *pull request*, *CI*, *branch*, or *merge*? They're all decode
 
 autopilot runs in one of two modes, set by one line (`autonomy:`) in `.autopilot/pipeline.yml`:
 
-| Mode | What happens | Best for |
-|---|---|---|
+| Mode           | What happens                                                                                                                                 | Best for                                                         |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
 | **`reviewed`** | Builds one phase **on your machine**, proves it with your tests, then **stops** for you to look. Needs only a local git project — no GitHub. | Your first runs; trying things out; staying close to every step. |
-| **`pr_ci`** | Fire-and-forget. Each phase becomes a branch → pull request → automated checks → auto-merge into the integration branch. | Long features you want built while you're away. |
+| **`pr_ci`**    | Fire-and-forget. Each phase becomes a branch → pull request → automated checks → auto-merge into the integration branch.                     | Long features you want built while you're away.                  |
 
 `reviewed` is the default. Flip to `pr_ci` when you're ready to step back.
 
@@ -39,8 +39,8 @@ You start it with one line:
 /loop Invoke the autopilot:orchestrate skill — run the next phase, then stop.
 ```
 
-Read it as: *"do the next phase, then start clean and do the one after, and keep going until the
-feature is finished."* Because progress is saved in your project's history (not the chat), you can
+Read it as: _"do the next phase, then start clean and do the one after, and keep going until the
+feature is finished."_ Because progress is saved in your project's history (not the chat), you can
 stop the loop any time and restart it later with the same line — it always resumes at the next
 unfinished phase.
 
@@ -68,13 +68,13 @@ into your main branch on its own.
 
 ## What you need for `pr_ci` mode
 
-| You'll need | Why |
-|---|---|
-| A git project with a **GitHub** home, and `gh` (GitHub's command-line tool) logged in | So autopilot can push, open pull requests, and merge |
-| **CI** that runs your checks on pull requests into the integration branch | This is the authority that decides each merge — see below |
-| The `/loop` feature | To re-run one phase after another, hands-off |
+| You'll need                                                                           | Why                                                       |
+| ------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| A git project with a **GitHub** home, and `gh` (GitHub's command-line tool) logged in | So autopilot can push, open pull requests, and merge      |
+| **CI** that runs your checks on pull requests into the integration branch             | This is the authority that decides each merge — see below |
+| The `/loop` feature                                                                   | To re-run one phase after another, hands-off              |
 
-### "I don't have any CI set up." — That's fine.
+### "I don't have any CI set up." — That's fine
 
 Autonomous mode relies on GitHub running your tests on each pull request and only merging when
 they're green. So it needs CI. **You don't have to set that up yourself.** During `/autopilot-init`
@@ -87,7 +87,7 @@ they're green. So it needs CI. **You don't have to set that up yourself.** Durin
   stops after each phase for you.
 
 Either way, **autopilot never merges a pull request that wasn't actually tested.** If the checks
-somehow didn't run at all, it treats that as *not done*, refuses to merge, and tells you exactly what
+somehow didn't run at all, it treats that as _not done_, refuses to merge, and tells you exactly what
 to do. A merge with zero checks would be the AI grading its own homework — and that's exactly what
 the design forbids. 🛡️
 

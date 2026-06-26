@@ -9,13 +9,13 @@ into the plugin; it all lives in two files in the target repo's `.autopilot/` di
 Everything stack-specific is externalized into the target repo's `.autopilot/` files. The plugin
 itself stays neutral:
 
-| Stack-specific concern | How autopilot externalizes it |
-|---|---|
-| Build / test / lint commands in the gate | `{{commands.*}}` resolved from `profile.yml` |
-| Language/framework conventions | `conventions:` free-text in `profile.yml` |
-| The phase plan | generated `phases:` in `pipeline.yml` |
-| Acceleration tooling | capability-detected accelerators; graceful Tier-3 fallback |
-| Security invariants | `security_invariants:` list (universal defaults) |
+| Stack-specific concern                   | How autopilot externalizes it                              |
+| ---------------------------------------- | ---------------------------------------------------------- |
+| Build / test / lint commands in the gate | `{{commands.*}}` resolved from `profile.yml`               |
+| Language/framework conventions           | `conventions:` free-text in `profile.yml`                  |
+| The phase plan                           | generated `phases:` in `pipeline.yml`                      |
+| Acceleration tooling                     | capability-detected accelerators; graceful Tier-3 fallback |
+| Security invariants                      | `security_invariants:` list (universal defaults)           |
 
 Everything else — git markers as durable state, one-phase-per-context, reviewed/pr_ci modes, the
 fix-budget handoff, the final `base → trunk` PR — is stack-neutral by design.
@@ -36,12 +36,12 @@ Two artifacts make a run reconstructable from the repo alone, both scoped by `fe
 
 ## The four skills
 
-| Skill | Job |
-|---|---|
-| `plan` | spec → phases with machine-checkable DoD |
-| `detect` | probe stack → confirm → `profile.yml` |
-| `run-phase` | implement one phase + run the gate, then stop |
-| `orchestrate` | the long-horizon loop (reviewed / pr_ci) |
+| Skill         | Job                                           |
+| ------------- | --------------------------------------------- |
+| `plan`        | spec → phases with machine-checkable DoD      |
+| `detect`      | probe stack → confirm → `profile.yml`         |
+| `run-phase`   | implement one phase + run the gate, then stop |
+| `orchestrate` | the long-horizon loop (reviewed / pr_ci)      |
 
 `run-phase` and `orchestrate` use progressive disclosure: the SKILL.md holds the discipline, and the
 details (full gate tiers, each mode's playbook) live in `references/` loaded only when needed — so a
@@ -52,7 +52,7 @@ firing reads only what that step requires, mirroring the runtime memory contract
 Autopilot can be left unattended only because advancement is gated on **machine-verified** checks, not
 the agent's self-assessment. Two rules make this safe:
 
-1. A skipped check is reported as *skipped*, never as a pass.
+1. A skipped check is reported as _skipped_, never as a pass.
 2. A red gate is never waved through — the phase doesn't advance.
 
 In `pr_ci` mode the merge authority moves one step further out: required GitHub CI checks, not the local
@@ -61,7 +61,7 @@ gate, decide a merge. The agent diagnoses and fixes within a bounded `fix_budget
 This only works if CI actually runs on the phase PRs. `detect` verifies that the repo's CI fires on PRs
 into `base` and — if it's missing (no workflow, or one scoped only to `trunk`) — offers to scaffold a
 base-targeted gate workflow from the detected commands, or to fall back to `reviewed` mode. As a backstop,
-the loop treats a PR with **zero** required checks as *skipped*, never green: it refuses to merge and
+the loop treats a PR with **zero** required checks as _skipped_, never green: it refuses to merge and
 hands off. A check-less merge would be self-certification, which rule 1 above forbids.
 
 ## Accelerators are optional by design
