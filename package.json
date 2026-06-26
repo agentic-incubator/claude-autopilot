@@ -1,6 +1,6 @@
 {
   "name": "claude-autopilot",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "description": "Quality and validation tooling for the claude-autopilot marketplace. The deliverable is prompt content (skills, commands, templates); these scripts keep the manifests valid and the docs lint-clean.",
   "license": "MIT",
