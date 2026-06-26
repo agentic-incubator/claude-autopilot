@@ -20,7 +20,8 @@ exclude = [
   "^https?://example\\.com",
   "^https?://localhost",
   "^https?://127\\.0\\.0\\.1",
-  # CHANGELOG compare/release links only resolve once a version is tagged.
+  # release-please writes CHANGELOG compare/release links pointing at the tag it
+  # creates on merge, so they 404 during the release PR window. Skip them.
   "github\\.com/.+/compare/",
   "github\\.com/.+/releases/tag/",
 ]

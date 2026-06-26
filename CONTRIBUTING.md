@@ -68,6 +68,24 @@ markdown link check.
 
 1. Fork and branch from `main` (never commit to `main` directly).
 2. Make your change and run `pnpm run check` (and `pnpm run fix` if needed).
-3. If your change is user-visible, add a note under `## [Unreleased]` in
-   [`CHANGELOG.md`](CHANGELOG.md). Maintainers handle the version bump at release time.
-4. Open a PR with a clear description and link any related issues.
+3. Open a PR with a clear description and link any related issues.
+
+### Commit / PR titles drive the changelog
+
+`CHANGELOG.md` and version bumps are generated automatically by
+[release-please](https://github.com/googleapis/release-please) — **don't edit the changelog or
+bump versions by hand.** It reads [Conventional Commit](https://www.conventionalcommits.org/)
+messages, and since PRs are squash-merged, **your PR title becomes that commit**, so it must
+follow the convention:
+
+| Prefix                                  | Use for                          | Version effect (pre-1.0) |
+| --------------------------------------- | -------------------------------- | ------------------------ |
+| `feat:`                                 | a new skill, command, capability | minor bump               |
+| `fix:`                                  | a bug or wording/clarity fix     | patch bump               |
+| `docs:`, `chore:`, `ci:`, `refactor:`   | non-shipping changes             | no release               |
+| `feat!:` or a `BREAKING CHANGE:` footer | a breaking change                | minor bump while pre-1.0 |
+
+Example PR titles: `feat: add a verify skill`, `fix(detect): handle missing package.json`,
+`docs: clarify the pr_ci handoff`.
+
+See [`docs/maintainers.md`](docs/maintainers.md) for how a release is actually cut.

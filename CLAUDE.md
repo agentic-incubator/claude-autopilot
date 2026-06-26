@@ -85,9 +85,10 @@ locally before committing:
 - `pnpm run check` — `validate` + Prettier + markdownlint.
 - `pnpm run link-check` — verifies markdown links resolve (needs network).
 
-Still done by hand: bump `plugins/autopilot/.claude-plugin/plugin.json` `version` **and**
-`marketplace.json` `metadata.version` (keep them identical) on a user-visible change, and add a
-CHANGELOG entry. See `docs/maintainers.md` for the release checklist.
+Versioning and `CHANGELOG.md` are **automated** by release-please — do not hand-bump versions or
+edit the changelog. Version bumps flow from Conventional Commit messages (and since PRs are
+squash-merged, the PR title is what counts). See `docs/maintainers.md` for how releases are cut
+and `CONTRIBUTING.md` for the commit-title convention.
 
 ## Git
 

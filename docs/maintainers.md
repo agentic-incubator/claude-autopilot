@@ -18,47 +18,49 @@ validator and CI gate exist — they are the real "release infrastructure."
 
 ## Versioning policy
 
-Semantic versioning, applied to the **plugin** (`autopilot`):
+Semantic versioning, derived automatically from [Conventional Commit](https://www.conventionalcommits.org/)
+messages (see "Releasing" below). The commit type drives the bump:
 
-- **patch** (`0.4.0 → 0.4.1`) — wording fixes, clarifications, non-behavioral edits.
-- **minor** (`0.4.0 → 0.5.0`) — new capability, new skill/command, or a behavior change that
-  is backward compatible for existing users.
-- **major** (`0.x → 1.0.0`, then `1.0.0 → 2.0.0`) — a breaking change to how a user invokes
-  autopilot, to `.autopilot/` template structure, or to the documented invariants.
+- **patch** (`0.4.0 → 0.4.1`) — `fix:` commits (wording fixes, clarifications, bug fixes).
+- **minor** (`0.4.0 → 0.5.0`) — `feat:` commits (new capability, new skill/command, backward-
+  compatible behavior change).
+- **major** (`1.0.0 → 2.0.0`) — a `!` breaking-change marker (`feat!:`) or a `BREAKING CHANGE:`
+  footer. While the plugin is pre-1.0, breaking changes bump the minor instead (configured via
+  `bump-minor-pre-major`).
 
-Two versions must always agree (CI enforces this):
+Three version fields are kept in lockstep automatically and must always agree (CI enforces it):
 
 - `plugins/autopilot/.claude-plugin/plugin.json` → `version`
 - `.claude-plugin/marketplace.json` → `metadata.version`
+- `package.json` → `version`
 
-## Release checklist
+## Releasing (automated via release-please)
 
-1. Ensure `main` is green and `pnpm run check:all` passes locally.
-2. Bump the version in **both** manifests (`plugin.json` and `marketplace.json`) — keep them
-   identical.
-3. Move the `## [Unreleased]` notes in [`CHANGELOG.md`](../CHANGELOG.md) into a new
-   `## [X.Y.Z] - <date>` section, and update the link references at the bottom of the file.
-   Leave a fresh empty `## [Unreleased]` heading.
-4. Commit on a branch, open a PR, and let CI run (`validate`, `check`, `audit`, link-check).
-5. Squash-merge to `main`.
-6. Tag the release and push the tag:
+Releases are driven by [release-please](https://github.com/googleapis/release-please), wired up in
+`.github/workflows/release.yml` with `release-please-config.json` and
+`.release-please-manifest.json`. **No manual version bumping or CHANGELOG editing.**
 
-   ```bash
-   git tag -a v0.5.0 -m "autopilot 0.5.0"
-   git push origin v0.5.0
-   ```
+How it flows:
 
-7. Create a GitHub Release for the tag, pasting that version's CHANGELOG section as the notes:
+1. Land work on `main` as usual (PRs with Conventional Commit titles — see `CONTRIBUTING.md`).
+   Because you squash-merge, the PR title becomes the commit release-please reads.
+2. On every push to `main`, release-please opens (or updates) a **`chore: release X.Y.Z`** PR
+   that bumps all three version fields and regenerates `CHANGELOG.md` from the commits since the
+   last release.
+3. When you're ready to ship, **merge that release PR**. release-please then creates the
+   `vX.Y.Z` git tag and the GitHub Release with notes drawn from the CHANGELOG.
 
-   ```bash
-   gh release create v0.5.0 --title "v0.5.0" --notes-from-tag
-   ```
+Because Claude Code installs from `main`, the version bump reaches users the moment the release
+PR merges; the tag and GitHub Release are human-readable history that now genuinely exists (so
+the CHANGELOG's `compare/` links resolve).
 
-   (`--notes-from-tag` reuses the annotated tag message; or use `--notes-file` with the
-   extracted CHANGELOG section.)
+> **Note:** PRs that release-please opens with the default `GITHUB_TOKEN` do not themselves
+> trigger the `pull_request` workflows in `ci.yml`. The release PR only bumps versions and the
+> CHANGELOG, so this is low-risk; if you want full CI on release PRs, supply a PAT as the
+> action's `token`.
 
-Tags and GitHub Releases are for humans tracking what changed — Claude Code installs from
-`main`, not from a tagged artifact, so the tag is documentation, not a delivery mechanism.
+To start a release manually (instead of waiting for the next push), re-run the **Release**
+workflow from the Actions tab.
 
 ## What CI guarantees
 
@@ -68,6 +70,7 @@ Tags and GitHub Releases are for humans tracking what changed — Claude Code in
 | `ci.yml` → check    | Prettier + markdownlint clean                                                   |
 | `ci.yml` → audit    | No moderate-or-higher dependency advisories                                     |
 | `link-check.yml`    | All markdown links resolve (weekly cron opens an issue on rot)                  |
+| `release.yml`       | Maintains the release PR; tags + cuts the GitHub Release on merge               |
 
 If you add a new check, wire it into both the relevant `package.json` script and `ci.yml` so
 local and CI stay in sync.
