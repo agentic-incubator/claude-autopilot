@@ -54,10 +54,18 @@ Because Claude Code installs from `main`, the version bump reaches users the mom
 PR merges; the tag and GitHub Release are human-readable history that now genuinely exists (so
 the CHANGELOG's `compare/` links resolve).
 
-> **Note:** PRs that release-please opens with the default `GITHUB_TOKEN` do not themselves
-> trigger the `pull_request` workflows in `ci.yml`. The release PR only bumps versions and the
-> CHANGELOG, so this is low-risk; if you want full CI on release PRs, supply a PAT as the
-> action's `token`.
+> **Required setup — one of these, or no release PR is opened.** This org disables
+> _"Allow GitHub Actions to create and approve pull requests,"_ so the default `GITHUB_TOKEN`
+> cannot open the release PR (the run fails with _"GitHub Actions is not permitted to create or
+> approve pull requests"_). Pick one:
+>
+> - **PAT (no org change):** create a token — classic with `repo` scope, or fine-grained with
+>   **Contents** + **Pull requests: write** — and add it as the repo secret
+>   **`RELEASE_PLEASE_TOKEN`**. `release.yml` already prefers it over `GITHUB_TOKEN`. A PAT also
+>   makes the release PR trigger `ci.yml` (the default token does not).
+> - **Org setting (org admin):** enable Org → Settings → Actions → General → Workflow
+>   permissions → _Allow GitHub Actions to create and approve pull requests_, then also set the
+>   repo's default workflow permissions to read/write.
 
 To start a release manually (instead of waiting for the next push), re-run the **Release**
 workflow from the Actions tab.
