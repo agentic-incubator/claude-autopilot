@@ -20,6 +20,9 @@ exclude = [
   "^https?://example\\.com",
   "^https?://localhost",
   "^https?://127\\.0\\.0\\.1",
+  # CHANGELOG compare/release links only resolve once a version is tagged.
+  "github\\.com/.+/compare/",
+  "github\\.com/.+/releases/tag/",
 ]
 
 # Mailto and other non-http schemes aren't worth probing.
