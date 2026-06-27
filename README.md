@@ -110,8 +110,9 @@ Commands are thin wrappers — the real logic lives in four skills (`plan`, `det
 
 `reviewed` mode (the default) needs only a **local git repo** — perfect for trying it out. Hands-off
 `pr_ci` mode adds a **GitHub** repo with `gh` logged in and **CI on pull requests** (autopilot sets
-that up for you if you don't have it). The optional **ruflo / agentic-qe** power-ups are detected
-automatically and degrade gracefully when absent. Full details in
+that up for you if you don't have it). The optional **planning** (superpowers, clarity, deep-research)
+and **execution** (ruflo, agentic-qe) power-ups are all detected automatically and degrade gracefully
+when absent. Full details in
 [Autonomous runs](docs/autonomous-runs.md#what-you-need-for-pr_ci-mode).
 
 ---

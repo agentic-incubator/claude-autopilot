@@ -45,20 +45,43 @@ sharpen the acceptance criteria now, not mid-run.
    `ruflo memory search -q "<feature>" --smart -n autopilot` to recall prior decisions. As you read,
    record each phase's relevant `adrs:` and `ddd:` so `run-phase` can pull just those slices. Use the
    domain's ubiquitous language (from the DDD docs) in phase goals and deliverable names.
-2. **Brainstorm if the scope is ambiguous.** Use `superpowers:brainstorming` to surface unknowns and
-   force decisions before they calcify into a bad plan. If the `clarity` skill is available, it's
-   excellent for turning reference material into numbered, testable requirements — use it to draft the
-   DoD lines.
-3. **Decompose into phases.** Find the natural seams: data model before the logic that uses it; a
+2. **Score spec readiness; enrich if it's thin.** Before decomposing, judge whether the corpus is
+   _ready to be gated_: could each prospective phase's Definition of Done reduce to checkable
+   `cmd:`/`grep:` lines (see "What good output looks like")? Score it — testable-criteria coverage,
+   count of unresolved decisions, missing acceptance criteria. Use `agentic-qe`'s `requirements_validate`
+   / `qe_requirements_quality-criteria` for the score when present (`profile.accelerators.agentic_qe`);
+   otherwise apply that rubric inline. **If the spec scores low, enrich it before planning** — this is
+   the cheapest place to fix it:
+   Enrich on a degrade ladder — best tool available, never blocking:
+   - **Best — dedicated skills.** When `deep-research` is available (`profile.accelerators.deep_research`),
+     drive it scoped to the _specific gaps_ the score flagged, and write its **cited** brief to
+     `.autopilot/research/<feature-id>.md` (durable git state — future phases read it as part of the
+     corpus). When `clarity` is available, turn the brief + corpus into numbered, testable requirements
+     that become DoD lines.
+   - **Middle — ruflo.** When those skills are absent but `profile.accelerators.ruflo` is set, ruflo has
+     no clarity/deep-research equivalent, but its `researcher` + SPARC `specification` agents and
+     `hive-mind` consensus beat a cold inline pass: research the flagged gaps and draft numbered
+     requirements, writing the result to `.autopilot/research/<feature-id>.md`. ruflo lacks citation and
+     verification discipline, so label every claim **unverified** for the confirm step.
+   - **Floor — inline.** With no research tooling, reason through the gaps yourself against the same
+     rubric (and use `superpowers:brainstorming`, if present, to force the open decisions — see step 3).
+     Enrichment degrades; it never blocks planning.
+   - **Then stop and have the user confirm** the enriched requirements and their sources before they
+     shape any phase. Synthesized research is evidence for a human decision, never auto-accepted as
+     ground truth — the agent does not self-certify.
+3. **Brainstorm if the scope is still ambiguous.** Even with a healthy score, use
+   `superpowers:brainstorming` (when available) to surface unknowns and force decisions before they
+   calcify into a bad plan.
+4. **Decompose into phases.** Find the natural seams: data model before the logic that uses it; a
    primitive before the feature built on it; the happy path before hardening. Each phase should be
    reviewable on its own and leave the build green. Set `depends_on:` where order is load-bearing.
-4. **Mark the risky phases.** Put the ids of phases with real blast radius (merge/auth/security logic,
+5. **Mark the risky phases.** Put the ids of phases with real blast radius (merge/auth/security logic,
    anything that executes generated edits) into `risk_phases:` — that's where orchestrate runs the
    expensive adversarial passes. Keep it small; everything gets the Tier-3 review regardless.
-5. **Pick the autonomy + branch model.** Default `autonomy: reviewed` (human checkpoint per phase) until
+6. **Pick the autonomy + branch model.** Default `autonomy: reviewed` (human checkpoint per phase) until
    the user has watched it work, then `pr_ci`. Confirm `trunk` and `base` branch names with the user if
    not obvious — `trunk` is never auto-merged, `base` is the integration branch.
-6. **Write `.autopilot/pipeline.yml`** from `templates/pipeline.yml`, filling the top block from the
+7. **Write `.autopilot/pipeline.yml`** from `templates/pipeline.yml`, filling the top block from the
    user's answers and the `phases:` from your decomposition. Set `feature_id` to a short kebab-case slug
    derived from the goal (e.g. "Add multi-region replication" → `multi-region-replication`); it scopes
    every git marker and the session ledger, so make it unique among any other autopilot runs in this
