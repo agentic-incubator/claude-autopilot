@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.0](https://github.com/agentic-incubator/claude-autopilot/compare/v0.5.0...v0.6.0) (2026-06-27)
+
+
+### Features
+
+* add planning accelerators with spec-readiness enrichment gate ([f2ef5d7](https://github.com/agentic-incubator/claude-autopilot/commit/f2ef5d761703fa2e964d00a38bb4048ea982a1c8))
+* add planning accelerators with spec-readiness enrichment gate ([4de3d98](https://github.com/agentic-incubator/claude-autopilot/commit/4de3d98c5a9874790cc758c34e1298e266388727))
+
 ## [0.5.0](https://github.com/agentic-incubator/claude-autopilot/compare/v0.4.0...v0.5.0) (2026-06-26)
 
 
