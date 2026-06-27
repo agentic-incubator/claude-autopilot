@@ -55,12 +55,21 @@ Also detect:
   (prd, plan, adr_dir, ddd_dir, extra). Look for `docs/specs`, `docs/architecture/adr`,
   `docs/architecture/ddd`, `docs/prd`/`PRD*`, RFCs, threat models. These let `plan` decompose with full
   context and let each phase read only its slice. Leave empty what doesn't exist.
-- **Accelerators** — probe BOTH scopes: global (`ruflo`/`aqe` on PATH) and project (a `.ruflo/`
-  directory, an `aqe init` footprint, project `.claude/` config). Set `accelerators.<tool>.available`
-  and `scope` ("global"/"project") accordingly, and check `/code-review`. When present, autopilot will
-  actively drive them (ruflo recall+swarms, aqe fleet) — see run-phase `references/accelerators.md`.
-  These are optional; absence just means the gate uses its Tier-3 floor (reviewer subagent +
-  /code-review) and you implement with focused subagents.
+- **Accelerators** — two classes, same contract (record availability → drive when present → degrade
+  to a floor when absent):
+  - **Execution** (`ruflo`, `agentic-qe`) — probe BOTH scopes: global (`ruflo`/`aqe` on PATH) and
+    project (a `.ruflo/` directory, an `aqe init` footprint, project `.claude/` config). Set
+    `accelerators.<tool>.available` and `scope` ("global"/"project"). When present, autopilot drives
+    them (ruflo recall+swarms, aqe fleet) — see run-phase `references/accelerators.md`. Absence just
+    means the gate uses its Tier-3 floor (reviewer subagent + /code-review) and you implement with
+    focused subagents.
+  - **Planning** (`superpowers`/brainstorming, `clarity`, `deep-research`) — these are Claude Code
+    **skills**, not on PATH. Note their availability from the **active skill set** (what you, the
+    running agent, can invoke), optionally corroborated by a `~/.claude/plugins` install footprint.
+    Set `accelerators.<tool>.available` with `scope: "skill"`. When present, `plan` uses them to score
+    spec readiness and enrich a thin spec; absence degrades to inline brainstorm/rubric. Never a gate
+    failure.
+  - Always check `/code-review` (the Tier-3 floor, assumed present).
 - **Conventions** — skim a few representative source files and summarize the house style (layering,
   naming, where tests live) into `conventions:` so new code matches.
 
@@ -78,10 +87,14 @@ ls Makefile justfile package.json Cargo.toml go.mod pyproject.toml pom.xml build
 ls -d docs/specs docs/prd docs/architecture/adr docs/architecture/ddd 2>/dev/null
 find docs -maxdepth 3 -iregex '.*\(adr\|ddd\|prd\|spec\|rfc\|threat\).*' -type f 2>/dev/null | head -40
 
-# Accelerators — global (PATH) and project (footprint)
+# Execution accelerators — global (PATH) and project (footprint)
 command -v ruflo aqe 2>/dev/null                          # global scope
 ls -d .ruflo .agentic-qe .claude 2>/dev/null              # project scope
 ruflo --version 2>/dev/null; aqe --version 2>/dev/null
+
+# Planning accelerators are SKILLS, not on PATH — judge availability from your own active skill set
+# (can you invoke `superpowers:brainstorming`, `clarity`, `deep-research`?). Optional footprint check:
+ls -d ~/.claude/plugins 2>/dev/null && ls ~/.claude/plugins 2>/dev/null | grep -Ei 'superpower|clarity|deep-research'
 
 # CI (pr_ci mode needs this) — does anything run on PRs into <base>?
 ls .github/workflows/*.yml .github/workflows/*.yaml 2>/dev/null && gh auth status 2>&1 | head -3
@@ -94,7 +107,9 @@ omits `<base>` is **trunk-only**, not covered.
 
 Map results into `profile.yml`: a found `make test` target → `commands.test: "make test"`; `ruflo` on
 PATH → `accelerators.ruflo: { available: true, scope: "global" }`; a `.ruflo/` dir → `scope: "project"`;
-found ADR/DDD dirs → `pipeline.references.adr_dir/ddd_dir`. So yes: **`autopilot:detect` (or
+a `clarity` skill you can invoke → `accelerators.clarity: { available: true, scope: "skill" }` (same
+for `superpowers`/`deep_research`); found ADR/DDD dirs → `pipeline.references.adr_dir/ddd_dir`. So yes:
+**`autopilot:detect` (or
 `/autopilot-detect`, or `/autopilot-init` which also plans) is the single skill/command that discovers
 all of this and crafts both `.autopilot/` files for you** — you only confirm.
 

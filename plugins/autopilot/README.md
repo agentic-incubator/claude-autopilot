@@ -66,7 +66,14 @@ hands off. A check-less merge would be self-certification, which rule 1 above fo
 
 ## Accelerators are optional by design
 
-`ruflo` (swarm + cross-session memory) and `agentic-qe` (mutation/pentest/chaos/coverage) make phases
-faster and the heavy `risk_phases` passes possible, but their absence never blocks a phase. The Tier-3
-floor — a reviewer subagent plus `/code-review` — runs everywhere regardless. This is what lets the
-plugin run on a vanilla repo with nothing but Claude Code, git, and `gh`.
+Two classes share one contract — detected when present, driven at the right step, degraded to a vanilla
+floor when absent (absence never blocks a phase):
+
+- **Execution** — `ruflo` (swarm + cross-session memory) and `agentic-qe` (mutation/pentest/chaos/
+  coverage) make phases faster and the heavy `risk_phases` passes possible. Floor: a reviewer subagent
+  plus `/code-review` + native coverage.
+- **Planning** — the `superpowers:brainstorming`, `clarity`, and `deep-research` skills sharpen a thin
+  spec before it's decomposed (`plan` step 1.5: score readiness → cited research → testable
+  requirements). Floor: inline brainstorm/rubric.
+
+This is what lets the plugin run on a vanilla repo with nothing but Claude Code, git, and `gh`.
