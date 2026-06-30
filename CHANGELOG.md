@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.0](https://github.com/agentic-incubator/claude-autopilot/compare/v0.6.0...v0.7.0) (2026-06-30)
+
+
+### Features
+
+* snapshot the plan into the ledger as record 0 ([9c91947](https://github.com/agentic-incubator/claude-autopilot/commit/9c919473837c36c5068e0305a33e8e7aeca2bdb7))
+* snapshot the plan into the ledger as record 0 ([d104c05](https://github.com/agentic-incubator/claude-autopilot/commit/d104c051f2b228216ad6022e4700aff46c2308fa))
+
 ## [0.6.0](https://github.com/agentic-incubator/claude-autopilot/compare/v0.5.0...v0.6.0) (2026-06-27)
 
 
