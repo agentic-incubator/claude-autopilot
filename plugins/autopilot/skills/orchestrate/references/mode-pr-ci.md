@@ -24,10 +24,19 @@ the harness re-invokes you when checks finish, so you idle without burning token
 ## STEP A — Locate state (read-only)
 
 ```
-0. Ensure base exists (idempotent):
-   git rev-parse --verify <base> fails →
-     git checkout <trunk> && git pull --ff-only && git checkout -b <base> && git push -u origin <base>
-   else → git checkout <base> && git pull --ff-only
+0. Ensure base exists — locally AND on the remote (idempotent). Two gaps to heal:
+   a. Remote base GONE (git ls-remote --exit-code --heads origin <base> fails). Happens after the
+      integration PR merges if GitHub "auto-delete head branch" is on. Recreate from refreshed trunk,
+      PRESERVING local work (incl. untracked queued plans), and push as a NEW branch — never --force:
+        git stash push -u -m autopilot-base-recreate     # -u carries .autopilot/queued/* along
+        git checkout <trunk> && git pull --ff-only
+        git branch -f <base> <trunk> && git checkout <base>
+        git push -u origin <base>                        # new-branch push, NOT a force-push
+        git stash list | grep -q autopilot-base-recreate && git stash pop
+   b. Remote base EXISTS but no local branch (git rev-parse --verify <base> fails):
+        git checkout <trunk> && git pull --ff-only && git checkout -b <base> origin/<base> 2>/dev/null \
+          || (git checkout -b <base> && git push -u origin <base>)
+   else (local + remote both present) → git checkout <base> && git pull --ff-only
 1. feature_id ← pipeline.yml.
    git log --oneline <base> | grep -E "\(autopilot:<feature_id>\): phase .* gate PASSED"
      → highest MERGED phase P → target N = P+1.   N past the last phase → STEP E (optimization PR).
@@ -117,6 +126,10 @@ A = count of `fix(autopilot:<feature_id>): ci attempt` commits on this branch
      --body  "<per-phase summary table · all gate markers · accelerator signals · 'Ready for human
               review; do NOT auto-merge'>"
    Report the integration PR URL and END THE LOOP. The human decides whether to merge into <trunk>.
+3. NEXT LINEAGE — if any queued plans exist (ls .autopilot/queued/*.pipeline.yml), do NOT auto-start
+   them. Tell the user this pipeline is done and the next one is parked, and give the exact promote
+   command from docs/lifecycle.md (mv queued → active, seed ledger record 0, commit), then
+   `/autopilot-run`. Promotion is a deliberate, human-initiated step — each feature is its own lineage.
 ```
 
 ## Invariants specific to pr_ci
@@ -124,6 +137,9 @@ A = count of `fix(autopilot:<feature_id>): ci attempt` commits on this branch
 - UNATTENDED: never wait for human input DURING a phase. The only stop conditions are GOAL reached
   (integration PR opened, human-gated) or fix_budget exhausted on a phase PR (handoff, PR left open).
 - One phase = one branch = one PR = one squash-merge marker on `base`.
+- Recreating a `base` that GitHub deleted after the integration merge (STEP A.0a) is a **new-branch
+  push**, not a force-push — a fresh branch has no remote history to overwrite, so it honors the
+  never-force-push-`base` invariant. Carry local work across the recreate with `git stash -u`/`pop`.
 - A phase advances ONLY after its PR is green and merged into `base`. Never merge a red or
   required-missing PR.
 - ZERO checks on a phase PR is SKIPPED, never green. A PR that ran no required checks must never be

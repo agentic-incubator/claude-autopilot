@@ -137,6 +137,7 @@ plugins/autopilot/
   commands/autopilot-{init,plan,detect,run,status}.md
   templates/{pipeline.yml,profile.yml,gate.md.tmpl,ci-gate.yml.tmpl}
   docs/WORKFLOW.md                   # deep design rationale
+  docs/lifecycle.md                  # multi-pipeline runbook: queue → promote → retire
 ```
 
 ---

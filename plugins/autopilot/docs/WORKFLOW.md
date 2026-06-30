@@ -115,3 +115,26 @@ phase can pass.
 
 The invariant across every column: **a red gate never advances, and a missing accelerator never fails
 the gate** — accelerators change speed and depth, not the pass/fail meaning.
+
+## Running more than one pipeline over time
+
+A repo isn't done after one feature. The lifecycle for coexisting pipelines is
+**plan → queued → (run active pipeline) → promote → run → retire**:
+
+- **Queued.** Scope a follow-up while one is in flight and `autopilot:plan` parks it at
+  `.autopilot/queued/<feature_id>.pipeline.yml` (git-ignored, so it stays local) instead of overwriting
+  the active plan. Adding a queued plan never disturbs the running one. An _unrelated_ requirement found
+  mid-run belongs in its own queued pipeline, not as a bolted-on phase — one coherent concern per
+  integration PR.
+- **Promote.** When the active pipeline finishes (its `base → trunk` PR is open), `mv` the queued file
+  into `.autopilot/pipeline.yml`, seed its ledger record 0, and commit. `orchestrate` ends the loop and
+  points you at this step; it never auto-starts the next feature.
+- **Retire.** Overwriting `pipeline.yml` with the next plan **is** retirement — no `archive/` dir,
+  nothing lost. The retired plan survives in git history and as record 0 of its own
+  `.autopilot/runs/<id>.jsonl`.
+- **Base recovery (pr_ci).** If GitHub deletes `base` after the integration merge, the next firing
+  recreates it from refreshed `trunk` and re-pushes it as a new branch (never a force-push), carrying
+  local work — including queued plans — across with `git stash -u`/`pop`.
+
+The exact, copy-pasteable, idempotent command sequences (promote, retire, retrofit a pre-0.7.0 ledger,
+recreate a deleted base) live in [`lifecycle.md`](lifecycle.md).

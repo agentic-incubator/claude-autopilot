@@ -21,6 +21,13 @@ durable sources (git + GitHub + the session ledger), not memory:
    - `git ls-remote --heads origin "autopilot/<feature_id>/phase-<N>"` → a pushed branch without a PR.
    - On the open PR, count `fix(autopilot:<feature_id>): ci attempt` commits to show fix-budget consumed.
 
+5. List any **queued** follow-up plans parked at `.autopilot/queued/*.pipeline.yml` (git-ignored, local
+   until promoted) — read each one's `feature_id` + `goal`. These don't run until promoted; note them
+   so the user remembers what's lined up. If the active ledger lacks a `type:plan` record 0 (a pre-0.7.0
+   ledger), mention it can be retrofitted (`plugins/autopilot/docs/lifecycle.md`).
+
 Present a compact summary: a phase table (done / next / pending) with each phase's last verdict from the
-ledger, the active mode, recent session history, and any open PR with its CI state and remaining fix
-budget. End with the single command to advance (`/autopilot-run`).
+ledger, the active mode, recent session history, any open PR with its CI state and remaining fix budget,
+and any queued plans waiting to be promoted. End with the single command to advance (`/autopilot-run`) —
+or, when the active pipeline is complete and a plan is queued, the promote step from
+`docs/lifecycle.md`.
