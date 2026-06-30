@@ -8,10 +8,13 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # YOU SUPPLY THIS
 # ─────────────────────────────────────────────────────────────────────────────
-# Stable, unique slug for THIS feature/run (kebab-case). Scopes every git marker AND the session
-# ledger at .autopilot/runs/<feature_id>.jsonl, so multiple autopilot runs in the same repo never
-# collide — the state grep only ever sees this feature's markers. `autopilot:plan` derives it from the
-# goal; keep it fixed once the first phase has landed. Markers read as `(autopilot:<feature_id>): …`.
+# Stable, unique slug for THIS feature/run (kebab-case). It is the run IDENTITY: it scopes every git
+# marker, the session ledger at .autopilot/runs/<feature_id>.jsonl, and the plan snapshot embedded as
+# that ledger's first line — so multiple features (and re-attempts) in one repo never collide; the
+# state grep only ever sees this slug's markers. `autopilot:plan` derives it from the goal; keep it fixed
+# once a phase has landed. A fresh attempt at the same feature gets a NEW slug (e.g. -v2) — that is how
+# autopilot models "run again": a new lineage, not a second run of one plan. Markers read as
+# `(autopilot:<feature_id>): …`.
 feature_id: "my-feature"
 goal: "One sentence: the feature this pipeline ships."
 spec: "docs/specs/my-feature.md"   # path | URL | inline prose. Source of truth for the plan.
