@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com/agentic-incubator/claude-autopilot/compare/v0.7.0...v0.8.0) (2026-06-30)
+
+
+### Features
+
+* **autopilot:** queued pipelines + promote/retire lifecycle ([#13](https://github.com/agentic-incubator/claude-autopilot/issues/13)) ([81488ae](https://github.com/agentic-incubator/claude-autopilot/commit/81488aece45ba8698a20aa1c1f27b50b3e866c78))
+
 ## [0.7.0](https://github.com/agentic-incubator/claude-autopilot/compare/v0.6.0...v0.7.0) (2026-06-30)
 
 
