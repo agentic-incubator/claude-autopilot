@@ -87,7 +87,11 @@ Every firing — pass or fail — appends **exactly one** line to `.autopilot/ru
 works on a vanilla repo with no ruflo. The git markers stay the authority for "what phase is next"; the
 ledger is the audit trail of how each phase got there.
 
-One JSON object per line, schema:
+The ledger's **first line is the plan record** (`{"type":"plan", …, "phases":[…]}`), written by
+`autopilot:plan`. It snapshots the phase set so the history stays interpretable even if `pipeline.yml` is
+later overwritten by another feature's plan. The plan record is the only line carrying `"type":"plan"`;
+**every other line is a firing record** — skip the plan line when summarizing firings. Firing records,
+one JSON object per line, schema:
 
 ```json
 {

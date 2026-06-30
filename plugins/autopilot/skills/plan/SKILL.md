@@ -84,10 +84,27 @@ sharpen the acceptance criteria now, not mid-run.
 7. **Write `.autopilot/pipeline.yml`** from `templates/pipeline.yml`, filling the top block from the
    user's answers and the `phases:` from your decomposition. Set `feature_id` to a short kebab-case slug
    derived from the goal (e.g. "Add multi-region replication" → `multi-region-replication`); it scopes
-   every git marker and the session ledger, so make it unique among any other autopilot runs in this
-   repo. If `.autopilot/runs/<that-slug>.jsonl` or matching `(autopilot:<slug>):` markers already exist,
-   this is a re-plan of the same feature (keep the slug) or a clash (suffix it, e.g. `-v2`) — decide
-   with the user.
+   every git marker, the session ledger, and the embedded plan snapshot (step 8), so make it unique among
+   any other autopilot work in this repo. There is only ONE `.autopilot/pipeline.yml` — before
+   overwriting it, check (from `.autopilot/runs/*.jsonl` and `(autopilot:<slug>):` markers in the repo)
+   whose feature it currently describes:
+   - **Refining a plan that hasn't shipped a phase yet** → keep the slug; overwrite freely.
+   - **A fresh attempt at a feature** (a prior run you want to redo from a clean slate) → give it a NEW
+     slug (e.g. `-v2`). Each attempt is its own lineage with its own ledger and plan snapshot — autopilot
+     has no separate "run id," the slug _is_ the run identity. This is how autopilot models "run again":
+     a new lineage, not a second run of the same plan.
+   - **A different feature whose manifest is still present** → the current `pipeline.yml` belongs to a
+     different `feature_id`. Tell the user it will be replaced (its plan survives in git history and as
+     record 0 of its own ledger) and confirm before overwriting.
+8. **Seed the ledger with the plan (record 0).** Append one JSON line to
+   `.autopilot/runs/<feature_id>.jsonl` so the ledger stays interpretable even after `pipeline.yml` is
+   later overwritten by another feature's plan:
+   `{"type":"plan","feature_id":"<slug>","goal":"<goal>","trunk":"<trunk>","base":"<base>","autonomy":"<mode>","phases":[{"id":0,"goal":"…","definition_of_done":["…"]},…],"at":"<git HEAD commit time>"}`
+   Capture enough of each phase (id, goal, DoD) that the firing history below it reads on its own. This is
+   the ledger's first line; every later line is a firing record (schema in
+   `run-phase/references/gate.md`). On a re-plan that keeps the slug, append a fresh `type:plan` line —
+   the most recent one describes the current phases. Read `at` from git (`git log -1 --format=%cI`); never
+   invent a clock value. Commit this line together with `pipeline.yml`.
 
 ## After writing
 

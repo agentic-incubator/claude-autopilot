@@ -28,11 +28,13 @@ Two artifacts make a run reconstructable from the repo alone, both scoped by `fe
 - **Git `gate PASSED` markers** — `(autopilot:<feature_id>): phase N complete — gate PASSED` commits.
   The **authority** for "what phase is next," re-derived by grep every firing. Scoping by `feature_id`
   fixes the multi-run hazard where a second feature's marker grep would otherwise match the first's.
-- **Session ledger** — `.autopilot/runs/<feature_id>.jsonl`, an append-only line per firing (phase,
-  verdict, skipped checks, ci_attempts, PR, accelerators, timestamp), committed alongside the marker.
-  It's the replayable audit trail — including FAILED attempts, which never leave a marker — and it works
-  on a vanilla repo with no ruflo. `/autopilot-status` reads it; ruflo memory, when present, is an
-  optional richer layer on top, never a requirement.
+- **Session ledger** — `.autopilot/runs/<feature_id>.jsonl`. Its first line is a plan snapshot (written
+  by `plan`, so the history stays interpretable even after `pipeline.yml` is overwritten by the next
+  feature); every line after is one firing (phase, verdict, skipped checks, ci_attempts, PR,
+  accelerators, timestamp), committed alongside the marker. It's the replayable audit trail — including
+  FAILED attempts, which never leave a marker — and it works on a vanilla repo with no ruflo.
+  `/autopilot-status` reads it; ruflo memory, when present, is an optional richer layer on top, never a
+  requirement.
 
 ## The four skills
 
