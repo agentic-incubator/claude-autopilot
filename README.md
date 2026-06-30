@@ -79,6 +79,15 @@ The how-and-why behind each of these is in [How it works](docs/concepts.md).
 
 _(Developing locally? Add this repo's path as a local marketplace instead.)_
 
+**Update** to the latest release:
+
+```
+/plugin marketplace update claude-autopilot
+```
+
+This refreshes the marketplace, then Claude Code picks up the newest plugin version. Your
+`.autopilot/` files and git markers are untouched. 🔁
+
 **Uninstall:**
 
 ```
