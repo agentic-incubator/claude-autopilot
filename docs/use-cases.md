@@ -71,6 +71,11 @@ each time, even a project with a dozen design docs never overwhelms it. Full det
 Progress lives in your project's history, not the chat. Stop on Friday, run the same `/loop` line
 Monday — it picks up the next unfinished phase automatically. 🗓️
 
+**Thought of the _next_ migration mid-run?** Scope it now — autopilot **queues** it on your machine
+without disturbing the run in flight, and prompts you to promote it once this one finishes. Keep each
+migration its own pipeline (one coherent pull request), not phases bolted onto this one. See
+[Autonomous runs](autonomous-runs.md#lining-up-the-next-feature).
+
 ---
 
 ## 3. 🧪 The quality-first team (with the power-ups on)

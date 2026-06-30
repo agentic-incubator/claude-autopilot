@@ -25,11 +25,16 @@ plugins/autopilot/
     orchestrate/references/{mode-pr-ci,mode-reviewed}.md
   templates/{pipeline.yml,profile.yml,gate.md.tmpl}     # scaffolded into a target repo's .autopilot/
   templates/ci-gate.yml.tmpl                            # scaffolded to .github/workflows/ when base CI is missing
-  docs/WORKFLOW.md
+  docs/WORKFLOW.md                                       # end-to-end flow + accelerators
+  docs/lifecycle.md                                      # multi-pipeline runbook (queue/promote/retire/retrofit/base-recreate)
 README.md   LICENSE (MIT)
 ```
 
-Everything else in the working tree (`.claude/`, `.claude-flow/`, `.swarm/`, `.agentic-qe/`,
+In a TARGET repo, autopilot writes under `.autopilot/`: the single active `pipeline.yml`, the shared
+`profile.yml`, per-feature ledgers `runs/<feature_id>.jsonl` (all committed), and parked follow-up
+plans `queued/<feature_id>.pipeline.yml` (git-ignored — local until promoted).
+
+Everything else in THIS repo's working tree (`.claude/`, `.claude-flow/`, `.swarm/`, `.agentic-qe/`,
 `.mcp.json`, `*.db`) is local tooling state and is git-ignored — **not** part of the plugin.
 
 ## The four skills
@@ -62,6 +67,11 @@ These are the load-bearing ideas of the design. Edits that weaken them are bugs:
 6. **Accelerators are optional.** External tools that speed up phases must degrade gracefully; their
    absence never blocks a phase. The floor — a reviewer subagent plus `/code-review` — runs on a
    vanilla repo with nothing but Claude Code, git, and `gh`.
+7. **One active pipeline; follow-ups queue.** There is exactly one active `.autopilot/pipeline.yml`.
+   A plan authored while one is in flight parks at `.autopilot/queued/<feature_id>.pipeline.yml`
+   (git-ignored) and never disturbs the running pipeline. Promotion (queued → active + seed ledger
+   record 0) is deliberate, never auto-started; retirement is just overwriting `pipeline.yml` — no
+   `archive/` dir, the old plan survives in git history and its own ledger. See `docs/lifecycle.md`.
 
 ## Authoring conventions
 

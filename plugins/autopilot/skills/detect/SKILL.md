@@ -159,8 +159,16 @@ works" and "it silently does nothing."
 ## Write
 
 Write `.autopilot/profile.yml` from `templates/profile.yml` with the confirmed values. Empty commands
-are legitimately skipped by the gate (and reported as skipped, never as passes). Then tell the user the
-pipeline is ready — `autopilot:orchestrate` (or `/autopilot-run`) will drive it.
+are legitimately skipped by the gate (and reported as skipped, never as passes). Ensure the queued-plan
+directory is git-ignored so parked follow-up pipelines stay local until promoted (idempotent, harmless
+if `plan` already added it):
+`grep -qxF '.autopilot/queued/' .gitignore 2>/dev/null || echo '.autopilot/queued/' >> .gitignore`.
+Then tell the user the pipeline is ready — `autopilot:orchestrate` (or `/autopilot-run`) will drive it.
+
+> **Note (pr_ci base lifecycle).** In `pr_ci` mode, if GitHub deletes `base` after the integration PR
+> merges ("auto-delete head branch"), `orchestrate` recreates it from refreshed `trunk` and re-pushes it
+> as a new branch — so your base-coverage verdict above still governs the recreated branch. That's a
+> runtime concern handled in `orchestrate/references/mode-pr-ci.md`; nothing to configure here.
 
 ## Why detect-then-confirm beats either extreme
 

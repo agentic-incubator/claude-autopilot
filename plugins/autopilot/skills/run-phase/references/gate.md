@@ -88,10 +88,18 @@ works on a vanilla repo with no ruflo. The git markers stay the authority for "w
 ledger is the audit trail of how each phase got there.
 
 The ledger's **first line is the plan record** (`{"type":"plan", …, "phases":[…]}`), written by
-`autopilot:plan`. It snapshots the phase set so the history stays interpretable even if `pipeline.yml` is
-later overwritten by another feature's plan. The plan record is the only line carrying `"type":"plan"`;
-**every other line is a firing record** — skip the plan line when summarizing firings. Firing records,
-one JSON object per line, schema:
+`autopilot:plan` (for an active plan) or at **promotion** (for a plan that was queued — see
+`docs/lifecycle.md`). It snapshots the phase set so the history stays interpretable even if
+`pipeline.yml` is later overwritten by another feature's plan. The plan record is the only line carrying
+`"type":"plan"`; **every other line is a firing record** — skip the plan line when summarizing firings.
+
+> **Retrofitting a legacy ledger.** Ledgers written before record 0 existed (pre-0.7.0) have no
+> `type:plan` line. Reconstruct one from the committed `pipeline.yml` and prepend it, reading `at` from
+> git so it reflects the plan's real age (`git log -1 --format=%cI -- .autopilot/pipeline.yml`, **not**
+> the current clock). The operation is **idempotent** — skip if a `type:plan` line is already present.
+> Exact sequence in `docs/lifecycle.md`.
+
+Firing records, one JSON object per line, schema:
 
 ```json
 {

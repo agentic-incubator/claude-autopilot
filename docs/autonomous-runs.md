@@ -66,6 +66,21 @@ into your main branch on its own.
 
 ---
 
+## Lining up the next feature
+
+You don't have to wait for one feature to finish before planning the next. If you scope a follow-up
+while a run is still going, autopilot **parks** it — a "queued" plan saved on your machine — instead of
+disturbing the pipeline that's already running. When the active feature wraps up, autopilot stops and
+shows you the one-line command to **promote** the queued plan into the active slot and start it. It
+never auto-starts the next feature; each one begins when you say so.
+
+Keep each feature its own pipeline: if a genuinely _unrelated_ idea comes up mid-run, queue it as a
+separate plan rather than bolting it onto the current one — that keeps every final pull request a
+single, reviewable concern. The exact steps live in the
+[lifecycle runbook](../plugins/autopilot/docs/lifecycle.md).
+
+---
+
 ## What you need for `pr_ci` mode
 
 | You'll need                                                                           | Why                                                       |
@@ -99,7 +114,8 @@ the design forbids. 🛡️
   final merge.
 - ✅ **No faked passes.** A skipped check is reported as skipped; a red gate never advances.
 - 🔒 **No risky history rewrites.** Fixes only ever go to the phase's own branch, never forced onto
-  shared branches.
+  shared branches. If GitHub auto-deletes the integration branch after the final merge, autopilot
+  rebuilds it from your up-to-date main branch as a brand-new branch — never a forced overwrite.
 - 🧭 **Bounded self-fixing.** autopilot retries a failing check only up to your `fix_budget`, then
   hands off to you instead of thrashing forever.
 

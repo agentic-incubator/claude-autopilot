@@ -90,4 +90,8 @@ The loop ends — omit the next `/loop` wakeup — only when every phase carries
 optimization pass is done, and (pr_ci) the `base → trunk` integration PR is open for human review. A
 goal-driven loop, not a fixed count: it stops because the goal state is reached.
 
+When you stop, if any **queued** plans are parked (`.autopilot/queued/*.pipeline.yml`), don't start
+them — name the exact promote command (`docs/lifecycle.md`) so the human kicks off the next lineage
+deliberately. One active pipeline at a time; promotion is never automatic.
+
 Pick your mode, read its playbook, and drive exactly one phase.

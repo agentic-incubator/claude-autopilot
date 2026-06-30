@@ -41,6 +41,9 @@ When N is past the last phase:
 - Verify the full gate (all `profile.commands`) is green.
 - Commit `chore(autopilot:<feature_id>): cross-phase optimization — gate PASSED` and append the final
   ledger line.
+- If any queued plans exist (`ls .autopilot/queued/*.pipeline.yml`), don't auto-start them — tell the
+  user the next one is parked and give the exact promote command from `docs/lifecycle.md`. Promotion is
+  deliberate; each feature is its own lineage.
 - Report completion and END THE LOOP (omit the next wakeup).
 
 ## Why no PRs here

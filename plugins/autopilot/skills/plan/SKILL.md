@@ -75,36 +75,55 @@ sharpen the acceptance criteria now, not mid-run.
 4. **Decompose into phases.** Find the natural seams: data model before the logic that uses it; a
    primitive before the feature built on it; the happy path before hardening. Each phase should be
    reviewable on its own and leave the build green. Set `depends_on:` where order is load-bearing.
+   **Keep the plan one coherent concern.** If you discover an _unrelated_ new requirement while scoping
+   (or the user raises one mid-run), it becomes a **separate queued pipeline** — its own `feature_id`,
+   its own integration PR — not a bolted-on phase here. A pipeline that tries to ship two unrelated
+   concerns produces an integration PR no human can review cleanly. Queue it (step 7) and keep this plan
+   focused.
 5. **Mark the risky phases.** Put the ids of phases with real blast radius (merge/auth/security logic,
    anything that executes generated edits) into `risk_phases:` — that's where orchestrate runs the
    expensive adversarial passes. Keep it small; everything gets the Tier-3 review regardless.
 6. **Pick the autonomy + branch model.** Default `autonomy: reviewed` (human checkpoint per phase) until
    the user has watched it work, then `pr_ci`. Confirm `trunk` and `base` branch names with the user if
    not obvious — `trunk` is never auto-merged, `base` is the integration branch.
-7. **Write `.autopilot/pipeline.yml`** from `templates/pipeline.yml`, filling the top block from the
-   user's answers and the `phases:` from your decomposition. Set `feature_id` to a short kebab-case slug
-   derived from the goal (e.g. "Add multi-region replication" → `multi-region-replication`); it scopes
-   every git marker, the session ledger, and the embedded plan snapshot (step 8), so make it unique among
-   any other autopilot work in this repo. There is only ONE `.autopilot/pipeline.yml` — before
-   overwriting it, check (from `.autopilot/runs/*.jsonl` and `(autopilot:<slug>):` markers in the repo)
-   whose feature it currently describes:
-   - **Refining a plan that hasn't shipped a phase yet** → keep the slug; overwrite freely.
-   - **A fresh attempt at a feature** (a prior run you want to redo from a clean slate) → give it a NEW
-     slug (e.g. `-v2`). Each attempt is its own lineage with its own ledger and plan snapshot — autopilot
-     has no separate "run id," the slug _is_ the run identity. This is how autopilot models "run again":
-     a new lineage, not a second run of the same plan.
-   - **A different feature whose manifest is still present** → the current `pipeline.yml` belongs to a
-     different `feature_id`. Tell the user it will be replaced (its plan survives in git history and as
-     record 0 of its own ledger) and confirm before overwriting.
-8. **Seed the ledger with the plan (record 0).** Append one JSON line to
-   `.autopilot/runs/<feature_id>.jsonl` so the ledger stays interpretable even after `pipeline.yml` is
-   later overwritten by another feature's plan:
+7. **Pick the write target — active or queued.** Set `feature_id` to a short kebab-case slug derived
+   from the goal (e.g. "Add multi-region replication" → `multi-region-replication`); it scopes every git
+   marker, the session ledger, and the embedded plan snapshot (step 8), so make it unique among any other
+   autopilot work in this repo. Then decide WHERE the plan lands, because there is only ONE active
+   `.autopilot/pipeline.yml`:
+   - **Is a pipeline currently in flight?** It is if `.autopilot/pipeline.yml` exists and its feature
+     still has un-shipped phases — i.e. some phase lacks a `(autopilot:<that-id>): … gate PASSED` marker
+     (`git log --oneline | grep "(autopilot:<that-id>): phase .* gate PASSED"` vs the phase count). If so,
+     **park this plan** at `.autopilot/queued/<feature_id>.pipeline.yml` instead of overwriting — adding a
+     queued plan must NEVER disturb the running one. Ensure the queued dir is git-ignored (parked plans
+     stay local until promoted):
+     `grep -qxF '.autopilot/queued/' .gitignore 2>/dev/null || echo '.autopilot/queued/' >> .gitignore`.
+     Tell the user it's queued and point them at the promote step in `docs/lifecycle.md` for when the
+     active pipeline finishes. **Skip step 8** for a queued plan — its ledger is seeded at promotion, not
+     now (a parked, untracked plan must not write committed state).
+   - **No pipeline in flight** → write the active `.autopilot/pipeline.yml` from `templates/pipeline.yml`,
+     filling the top block from the user's answers and the `phases:` from your decomposition, then do
+     step 8. Before overwriting an existing active manifest, check whose feature it describes:
+     - **Refining a plan that hasn't shipped a phase yet** → keep the slug; overwrite freely.
+     - **A fresh attempt at a feature** (a prior run you want to redo from a clean slate) → give it a NEW
+       slug (e.g. `-v2`). Each attempt is its own lineage with its own ledger and plan snapshot — autopilot
+       has no separate "run id," the slug _is_ the run identity. This is how autopilot models "run again":
+       a new lineage, not a second run of the same plan.
+     - **A completed/different feature whose manifest is still present** → **overwriting `pipeline.yml`
+       _is_ the previous feature's retirement** — there is no `archive/` dir and nothing is lost. The
+       retired plan survives in git history (`git log --follow -- .autopilot/pipeline.yml`) and as record 0
+       of its own `.autopilot/runs/<old-id>.jsonl` ledger. Tell the user this and confirm before
+       overwriting. (Full retire/read-back sequence: `docs/lifecycle.md`.)
+8. **Seed the ledger with the plan (record 0).** _(Active plans only — a queued plan is seeded at
+   promotion.)_ Append one JSON line to `.autopilot/runs/<feature_id>.jsonl` so the ledger stays
+   interpretable even after `pipeline.yml` is later overwritten by another feature's plan:
    `{"type":"plan","feature_id":"<slug>","goal":"<goal>","trunk":"<trunk>","base":"<base>","autonomy":"<mode>","phases":[{"id":0,"goal":"…","definition_of_done":["…"]},…],"at":"<git HEAD commit time>"}`
    Capture enough of each phase (id, goal, DoD) that the firing history below it reads on its own. This is
    the ledger's first line; every later line is a firing record (schema in
    `run-phase/references/gate.md`). On a re-plan that keeps the slug, append a fresh `type:plan` line —
    the most recent one describes the current phases. Read `at` from git (`git log -1 --format=%cI`); never
-   invent a clock value. Commit this line together with `pipeline.yml`.
+   invent a clock value. Commit this line together with `pipeline.yml`. (Ledgers from before this record
+   existed can be retrofitted — see `docs/lifecycle.md`.)
 
 ## After writing
 

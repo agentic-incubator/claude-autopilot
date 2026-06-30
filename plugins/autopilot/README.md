@@ -36,6 +36,26 @@ Two artifacts make a run reconstructable from the repo alone, both scoped by `fe
   `/autopilot-status` reads it; ruflo memory, when present, is an optional richer layer on top, never a
   requirement.
 
+## Many pipelines over time: queue → promote → retire
+
+A repo outlives one feature. autopilot keeps exactly **one active** `pipeline.yml`, and codifies the
+hand-run lifecycle for everything around it — all idempotent and resumable, with the exact command
+sequences in [`docs/lifecycle.md`](docs/lifecycle.md):
+
+- **Queue.** Scope a follow-up while one is in flight and `plan` parks it at
+  `.autopilot/queued/<feature_id>.pipeline.yml` — git-ignored, so it stays local — instead of
+  overwriting the active plan. Adding a queued plan touches only an untracked file, so it never
+  disturbs the running pipeline. An _unrelated_ requirement found mid-run belongs in its own queued
+  pipeline, keeping each pipeline (and its integration PR) one coherent concern.
+- **Promote.** When the active pipeline finishes, `mv` the queued file into place, seed its ledger
+  record 0, and commit. `orchestrate` ends the loop and points at this step — it never auto-starts the
+  next feature, so each lineage begins on a human's decision.
+- **Retire.** Overwriting `pipeline.yml` with the next plan _is_ retirement — there is no `archive/`
+  dir and nothing is lost: the retired plan survives in git history and as record 0 of its own ledger.
+- **Base recovery (pr_ci).** If GitHub deletes `base` after the integration merge, the next firing
+  recreates it from refreshed `trunk` as a **new branch** (never a force-push), carrying local work —
+  queued plans included — across with `git stash -u`/`pop`.
+
 ## The four skills
 
 | Skill         | Job                                           |
