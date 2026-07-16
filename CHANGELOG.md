@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/agentic-incubator/claude-autopilot/compare/v0.9.0...v0.10.0) (2026-07-16)
+
+
+### Features
+
+* parallel execution of ready units via a gated merge queue ([#20](https://github.com/agentic-incubator/claude-autopilot/issues/20)) ([307136b](https://github.com/agentic-incubator/claude-autopilot/commit/307136beb3b625ff2ef17a556bb573273ae2a386))
+
 ## [0.9.0](https://github.com/agentic-incubator/claude-autopilot/compare/v0.8.0...v0.9.0) (2026-07-16)
 
 
