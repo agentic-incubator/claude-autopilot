@@ -149,8 +149,9 @@ follow-on designs safe concurrent execution.
 
 **Follow-on (now specified):** true parallel execution of multiple ready units is designed in
 [ADR-0002](0002-parallel-ready-units-merge-queue.md) (Accepted) — a gated merge queue, touch-set
-admission control, git-native claim locking, and conflict-as-requeue. Still deferred: whether
-`discovered-from` work auto-promotes vs. stays queued.
+admission control, git-native claim locking, and conflict-as-requeue. The discovered-work question
+(whether `discovered-from` work auto-promotes vs. stays queued) is designed in
+[ADR-0003](0003-discovered-work-blockers-parking-lot.md) (Proposed).
 
 ## References
 
