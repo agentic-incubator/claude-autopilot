@@ -51,14 +51,16 @@ Determine the target phase in this order:
 
 - Explicitly given (user said "phase 3", or the orchestrator passed one) → use it.
 - Otherwise discover from git markers **scoped to this feature** (`feature_id` from `pipeline.yml`):
-  the highest `feat(autopilot:<feature_id>): phase <N> complete — gate PASSED` commit is the last done
-  phase; target = N+1. None found → phase 0.
+  the done-set is every `feat(autopilot:<feature_id>): phase <N> complete — gate PASSED` commit; target
+  = the **lowest-id ready phase** (no PASSED marker AND every id in its `depends_on` is in the done-set —
+  the same dependency-aware ready-set `orchestrate` computes). With empty `depends_on` this is just
+  highest-done + 1. None done → the lowest-id phase (0).
   `git log --oneline | grep -E "\(autopilot:<feature_id>\): phase .* gate PASSED"`. Scoping by
   `feature_id` is what lets several features run in one repo without one's markers being mistaken for
   another's.
 
-Refuse to start phase N (N>0) until phase N-1's `gate PASSED` marker exists, and honor any
-`depends_on:` in the phase entry. Out-of-order phases break the resumability guarantee.
+Refuse to start phase N until **every id in its `depends_on:` has a `gate PASSED` marker**. Starting a
+phase whose dependencies aren't satisfied breaks the resumability guarantee.
 
 ## Step 1 — Orient & resume (read-only)
 
@@ -71,10 +73,11 @@ If accelerators.ruflo is available, recall prior decisions:
 
 Check `profile.accelerators`. When `ruflo.available`, drive it rather than working solo: recall prior
 decisions from memory, init a swarm, and spawn the right specialist agents for this phase. When
-`agentic_qe.available`, init the QE fleet once so its checks are ready for the gate. When both are
-absent, you do the work directly with focused subagents — that's the supported baseline, not a
-degraded mode. The exact commands and the step-by-step mapping live in `references/accelerators.md` —
-read it whenever either flag is true.
+`agentic_qe.available`, init the QE fleet once so its checks are ready for the gate. When
+`beads.available`, you may `bd show <unit>` / `bd ready` to see this unit's graph context — read-only;
+beads never decides the gate. When all are absent, you do the work directly with focused subagents —
+that's the supported baseline, not a degraded mode. The exact commands and the step-by-step mapping
+live in `references/accelerators.md` — read it whenever any flag is true.
 
 ## Step 2 — Plan
 
@@ -129,7 +132,12 @@ On PASS:
   in the same commit** so marker and log are atomic (add a Co-Authored-By trailer only if the repo's
   `.claude/settings.json` enables attribution — don't add it by default).
 - Persist a ≤12-line summary (what shipped · test counts · DoD evidence · gotchas for the next phase).
-  With ruflo: `ruflo memory store -k autopilot-<feature_id>-phase-<N> --value "<summary>" -n autopilot`.
+  With ruflo: `ruflo memory store -k autopilot-<feature_id>-<unit_id> --value "<summary>" -n autopilot`,
+  where `<unit_id>` is the phase id (and the bead id when beads is present, so recall lines up with the
+  graph).
+- If `beads.available`, sync this unit's bead status **from** the marker you just wrote — **one way,
+  markers → beads** (e.g. `bd close <unit>` / `bd update`). Never read bead status back to decide what's
+  done; the git marker is the authority and beads is only the projection.
 - Report the summary and STOP. Do **not** begin phase N+1 — that's the next run's job.
 
 ## Why "one phase, then stop" is non-negotiable
