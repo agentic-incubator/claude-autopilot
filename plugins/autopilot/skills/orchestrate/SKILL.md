@@ -52,16 +52,31 @@ Markers are the **authority** for "what phase is next"; the ledger is the human-
 how each phase got there. Both are scoped by `feature_id` so multiple features in one repo never
 collide.
 
-The load-bearing rule: **never load all phases.** Each firing reads the top of `pipeline.yml` plus only
-the current phase entry. The durable tier carries everything else as compact summaries.
+The load-bearing rule: **never load all phase _bodies_.** Each firing reads the top of `pipeline.yml`,
+the cheap `(id, depends_on)` skeleton of every phase (needed to compute the ready-set — ids and edges
+only, not goals/deliverables/DoD), plus the full entry for **only the current phase**. The durable tier
+carries everything else as compact summaries.
 
 ## Every firing
 
-1. **Locate state (read-only, cheap).** Read `feature_id` from `pipeline.yml`. In pr_ci mode ensure
-   `base` exists and is current first (see the playbook). Then grep markers **scoped to this feature**:
-   `git log --oneline | grep -E "\(autopilot:<feature_id>\): phase .* gate PASSED"` → highest done
-   phase P → target N = P+1. If N is past the last phase in `pipeline.yml` → optimization pass (see
-   playbook), then end the loop.
+1. **Locate state and pick the ready phase (read-only, cheap).** Read `feature_id` from `pipeline.yml`.
+   In pr_ci mode ensure `base` exists and is current first (see the playbook). Then derive the target
+   from the **dependency-aware ready-set** (the git-native work graph — see
+   `docs/adr/0001-dependency-aware-work-graph-beads-ruflo.md`):
+   - **Done-set** — grep markers **scoped to this feature** for _every_ PASSED phase (not just the
+     highest): `git log --oneline | grep -E "\(autopilot:<feature_id>\): phase .* gate PASSED"`.
+   - **Ready-set** — read only the cheap `(id, depends_on)` skeleton of the `phases:` list (NOT the
+     phase bodies — that preserves the memory contract). A phase is **ready** when it has no PASSED
+     marker AND every id in its `depends_on` is in the done-set. **Target N = the lowest-id ready phase.**
+     - Empty `depends_on` on every phase ⇒ the ready-set is "all un-done phases" and lowest-id selection
+       yields N = P+1 — **identical to a flat linear pipeline**. The graph only changes selection once
+       deps are declared (then a later-id phase may run before an earlier one still blocked).
+     - If `accelerators.beads` is set, `bd ready` should agree — use it as a cross-check/visualization,
+       never as the authority. Reconcile **one way: sync bead status _from_ the markers**, never the
+       reverse. Git markers decide.
+   - **Termination / deadlock** — ready-set empty AND every phase PASSED → optimization pass (see
+     playbook), then end the loop. Ready-set empty with un-done phases remaining means a `depends_on`
+     cycle or an unsatisfiable dependency: **stop and report it — never spin.**
 2. **Resume check.** Before starting fresh, look for in-flight work for phase N (an open PR, a pushed
    branch, a half-done local tree) and resume it rather than restarting. The playbooks enumerate the
    exact interruption windows to check — covering them is what makes re-firing safe.
