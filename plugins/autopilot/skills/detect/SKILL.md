@@ -57,12 +57,14 @@ Also detect:
   context and let each phase read only its slice. Leave empty what doesn't exist.
 - **Accelerators** — two classes, same contract (record availability → drive when present → degrade
   to a floor when absent):
-  - **Execution** (`ruflo`, `agentic-qe`) — probe BOTH scopes: global (`ruflo`/`aqe` on PATH) and
-    project (a `.ruflo/` directory, an `aqe init` footprint, project `.claude/` config). Set
-    `accelerators.<tool>.available` and `scope` ("global"/"project"). When present, autopilot drives
-    them (ruflo recall+swarms, aqe fleet) — see run-phase `references/accelerators.md`. Absence just
-    means the gate uses its Tier-3 floor (reviewer subagent + /code-review) and you implement with
-    focused subagents.
+  - **Execution** (`ruflo`, `agentic-qe`, `beads`) — probe BOTH scopes: global (`ruflo`/`aqe`/`bd` on
+    PATH) and project (a `.ruflo/` directory, an `aqe init` footprint, a `.beads/` directory, project
+    `.claude/` config). Set `accelerators.<tool>.available` and `scope` ("global"/"project"). When
+    present, autopilot drives them (ruflo recall+swarms, aqe fleet, beads work-graph projection) — see
+    run-phase `references/accelerators.md`. Absence just means the gate uses its Tier-3 floor (reviewer
+    subagent + /code-review), you implement with focused subagents, and the dependency-aware ready-set
+    is computed from `pipeline.yml depends_on` + git markers directly (beads only adds a queryable view,
+    never changes correctness — see the work-graph ADR, `docs/adr/0001-…`).
   - **Planning** (`superpowers`/brainstorming, `clarity`, `deep-research`) — these are Claude Code
     **skills**, not on PATH. Note their availability from the **active skill set** (what you, the
     running agent, can invoke), optionally corroborated by a `~/.claude/plugins` install footprint.
@@ -88,9 +90,9 @@ ls -d docs/specs docs/prd docs/architecture/adr docs/architecture/ddd 2>/dev/nul
 find docs -maxdepth 3 -iregex '.*\(adr\|ddd\|prd\|spec\|rfc\|threat\).*' -type f 2>/dev/null | head -40
 
 # Execution accelerators — global (PATH) and project (footprint)
-command -v ruflo aqe 2>/dev/null                          # global scope
-ls -d .ruflo .agentic-qe .claude 2>/dev/null              # project scope
-ruflo --version 2>/dev/null; aqe --version 2>/dev/null
+command -v ruflo aqe bd 2>/dev/null                       # global scope (bd = beads)
+ls -d .ruflo .agentic-qe .beads .claude 2>/dev/null       # project scope
+ruflo --version 2>/dev/null; aqe --version 2>/dev/null; bd version 2>/dev/null
 
 # Planning accelerators are SKILLS, not on PATH — judge availability from your own active skill set
 # (can you invoke `superpowers:brainstorming`, `clarity`, `deep-research`?). Optional footprint check:
@@ -107,8 +109,9 @@ omits `<base>` is **trunk-only**, not covered.
 
 Map results into `profile.yml`: a found `make test` target → `commands.test: "make test"`; `ruflo` on
 PATH → `accelerators.ruflo: { available: true, scope: "global" }`; a `.ruflo/` dir → `scope: "project"`;
-a `clarity` skill you can invoke → `accelerators.clarity: { available: true, scope: "skill" }` (same
-for `superpowers`/`deep_research`); found ADR/DDD dirs → `pipeline.references.adr_dir/ddd_dir`. So yes:
+`bd` on PATH → `accelerators.beads: { available: true, scope: "global" }`; a `.beads/` dir →
+`scope: "project"`; a `clarity` skill you can invoke → `accelerators.clarity: { available: true, scope: "skill" }`
+(same for `superpowers`/`deep_research`); found ADR/DDD dirs → `pipeline.references.adr_dir/ddd_dir`. So yes:
 **`autopilot:detect` (or
 `/autopilot-detect`, or `/autopilot-init` which also plans) is the single skill/command that discovers
 all of this and crafts both `.autopilot/` files for you** — you only confirm.
