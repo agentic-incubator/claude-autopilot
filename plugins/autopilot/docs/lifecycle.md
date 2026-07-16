@@ -161,6 +161,32 @@ This is a new-branch push, so it cannot rewrite remote history — it satisfies 
 forbids `git push --force` to `base`/`trunk`. If `base` still exists remotely, the normal path applies:
 `git checkout "$BASE" && git pull --ff-only`.
 
+## Action a discovered blocker
+
+When a phase stops with a **`BLOCKED`** verdict (a prerequisite that doesn't exist yet — ADR-0003), it
+recorded a blocker in `.autopilot/discovered/<feature_id>.jsonl` and left the phase out of the ready-set.
+You resolve it through the normal commands — there is no imperative "unblock":
+
+```bash
+# 1. SEE it (read-only): open blockers render loud, with id · blocks: N · provenance.
+/autopilot-status
+
+# 2. ACTION it via /autopilot-plan (it edits git AND appends an append-only status transition):
+#    - FOLD:    insert a prerequisite phase, add its id to the blocked phase's depends_on:, then
+#               append {"ref":"<id>","status":"promoted","at":"<git time>"} to the discovered log.
+#    - QUEUE:   author it as .autopilot/queued/<id>.pipeline.yml (parked), stamp the item "promoted".
+#    - DISMISS: correct the blocked phase's definition_of_done, stamp the item "dismissed".
+/autopilot-plan
+
+# 3. RESUME: the ready-set re-includes the phase automatically once the prerequisite is gate-PASSED
+#    (fold) or the blocker is dismissed. Satisfying the dependency IS the unblock.
+/autopilot-run
+```
+
+Status transitions are **append-only** (never edit a prior line); an item's current status is its latest
+line, so the log stays replayable like the run ledger. **Parking-lot** items need no action — they're a
+backlog; promote one to a queued pipeline whenever you choose, exactly like any other queued follow-up.
+
 ## See also
 
 - [`WORKFLOW.md`](WORKFLOW.md) — the end-to-end flow and where accelerators plug in.

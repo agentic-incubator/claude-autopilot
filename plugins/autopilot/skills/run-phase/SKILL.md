@@ -121,6 +121,26 @@ Aggregate into one verdict:
 - **FAIL** → report exactly which check failed with its output, leave the work uncommitted (or as-is on
   the branch), persist the blocker if ruflo is available, **append a `"verdict":"FAILED"` ledger line**
   (schema in `references/gate.md`), and STOP. The next run resumes at Step 1.
+- **BLOCKED** (a _distinct_ stop reason — the phase can't reach a green gate because a **prerequisite that
+  doesn't yet exist** is missing, not because its own work is wrong) → record a **blocker** in
+  `.autopilot/discovered/<feature_id>.jsonl` (schema + rules in `references/discovered.md`), append a
+  `"verdict":"BLOCKED"` ledger line, and STOP with a handoff naming _what is missing and which phase it
+  holds_. A blocker is **not** a gate failure: it consumes **neither** `fix_budget` **nor** the parallel
+  `requeue_budget`. Bias to a plain FAIL/parking-lot unless the phase genuinely cannot proceed — see
+  `references/discovered.md` for the blocker-vs-parking-lot test.
+
+## Discovered work (any step)
+
+If, while implementing or gating, you notice work that wasn't planned, record it — never silently drop
+it and never silently fold it in (that would scope-creep the PR):
+
+- an **out-of-scope tangent** (a latent bug, an unrelated N+1, a missing test elsewhere) → append a
+  **`parking-lot`** item and **keep going**; it never blocks.
+- an **in-scope prerequisite you can't satisfy** → that's the **BLOCKED** verdict above (a `blocker`).
+
+Both carry provenance (origin phase, `discovered_by`) and are committed with the phase's work.
+`references/discovered.md` is the full contract; you only _record_ here — a human actions items via
+`/autopilot-status` (see) → `/autopilot-plan` (fold/queue/dismiss).
 
 ## Step 6 — Mark done, log the session & STOP
 

@@ -155,6 +155,36 @@ byte-for-byte the single-phase behavior — parallelism is strictly opt-in. Full
 [ADR-0002](adr/0002-parallel-ready-units-merge-queue.md); the operational playbook:
 `plugins/autopilot/skills/orchestrate/references/mode-pr-ci-parallel.md`.
 
+## Discovered work — blockers & parking-lot
+
+Mid-run an agent often finds work that wasn't planned. autopilot never silently drops it and never
+silently folds it into the PR (that would creep the scope). Instead it records it — provenance-stamped,
+split by kind — in a committed `.autopilot/discovered/<feature_id>.jsonl` (git is authority; beads mirrors
+it as `discovered-from` edges). Full design: [ADR-0003](adr/0003-discovered-work-blockers-parking-lot.md).
+
+- **Parking-lot** — an out-of-scope tangent (a latent bug, an unrelated N+1). Recorded passively; **never
+  blocks**, never enters the active graph. A backlog a human triages later.
+- **Blocker** — an in-scope prerequisite the phase can't satisfy (it can't reach a green gate because
+  something it depends on doesn't exist). run-phase records it with a distinct **`BLOCKED`** verdict
+  (not a gate failure — it consumes no `fix_budget`/`requeue_budget`) and **stops that unit**. In parallel
+  mode only the blocked unit halts; siblings keep going. An **open blocker removes its phase from the
+  ready-set**, so orchestrate never re-runs it in a loop; if everything left is blocked it stops with
+  "⏸ awaiting human," never spins.
+
+**Actioning a blocker uses the commands you already have — no new one.** Satisfying the dependency _is_
+the unblock:
+
+```text
+/autopilot-status   → see open blockers (loud): id · blocks: N · provenance · → /autopilot-plan
+/autopilot-plan     → fold it in (new phase + depends_on edge) · queue it (own pipeline) · or
+                      dismiss (correct the DoD); appends an append-only status transition
+/autopilot-run      → resumes: once the prerequisite is gate-PASSED (or the DoD corrected), the
+                      ready-set re-includes the phase automatically
+```
+
+`status` to see, `plan` to action, `run` to resume — the human makes the scope call, autopilot does the
+mechanical resume.
+
 ## Running more than one pipeline over time
 
 A repo isn't done after one feature. The lifecycle for coexisting pipelines is

@@ -93,7 +93,8 @@ locally before committing:
   matching `commands/*.md`, and every `skills/*/` directory has a `SKILL.md` whose frontmatter
   `name` matches the directory and carries a `description`.
 - `pnpm run proof` — two plain-Node proofs, run inside `check`: `scripts/verify-ready-set.mjs` proves
-  the ADR-0001 ready-set (parallel ready units, resumability, flat==linear, deadlock guard), and
+  the ADR-0001 ready-set + ADR-0003 blocker semantics (parallel ready units, resumability, flat==linear,
+  deadlock guard, open-blocker exclusion, resolve-reincludes, all-blocked-stops, parking-lot-inert), and
   `scripts/verify-parallel-merge-queue.mjs` proves the ADR-0002 parallel model (claim atomicity,
   admission control, cap1==serial, serialized re-gated merge, conflict escalation, exactly-once).
 - `pnpm run check` — `validate` + `proof` + Prettier + markdownlint.

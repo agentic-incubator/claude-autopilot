@@ -18,16 +18,19 @@ const check = (cond, msg) => {
   if (!cond) problems.push(msg);
 };
 
-// ── The model: exactly the ADR-0001 / SKILL.md rule ──────────────────────────
-// ready(P) ≡ P not in done-set ∧ every id in P.depends_on ∈ done-set. select = lowest-id ready.
-const readySet = (phases, done) =>
+// ── The model: exactly the ADR-0001 / SKILL.md rule (+ ADR-0003 blocker exclusion) ───────────────────
+// ready(P) ≡ P not in done-set ∧ every id in P.depends_on ∈ done-set ∧ P has no OPEN blocker.
+// select = lowest-id ready. `openBlockers` defaults empty, so ADR-0001 callers are unchanged.
+const readySet = (phases, done, openBlockers = new Set()) =>
   phases
-    .filter((p) => !done.has(p.id) && (p.depends_on ?? []).every((d) => done.has(d)))
+    .filter(
+      (p) => !done.has(p.id) && !openBlockers.has(p.id) && (p.depends_on ?? []).every((d) => done.has(d)),
+    )
     .map((p) => p.id)
     .sort((a, b) => a - b);
 
-const select = (phases, done) => {
-  const r = readySet(phases, done);
+const select = (phases, done, openBlockers = new Set()) => {
+  const r = readySet(phases, done, openBlockers);
   return r.length ? r[0] : null;
 };
 
@@ -113,10 +116,55 @@ check(
   "D: cyclic graph must fail to cover all phases (the deadlock orchestrate reports)",
 );
 
+// ── Proof E: an OPEN blocker excludes its phase from the ready-set (ADR-0003) ────────────────────────
+// After phase 0, {1,3,5} are normally ready. An open blocker on phase 1 removes it — no tight-loop
+// re-run of a blocked unit — while its unrelated siblings stay ready.
+const doneAfter0 = new Set([0]);
+const blocked1 = new Set([1]); // phase 1 has an open blocker
+const readyBlocked = readySet(multiTrack, doneAfter0, blocked1);
+check(!readyBlocked.includes(1), `E: an open blocker on phase 1 must exclude it, got [${readyBlocked}]`);
+check(
+  JSON.stringify(readyBlocked) === JSON.stringify([3, 5]),
+  `E: sibling tracks stay ready while 1 is blocked; expected [3,5], got [${readyBlocked}]`,
+);
+
+// ── Proof F: resolving a blocker re-includes the phase (dismiss path) ─────────────────────────────────
+// Same state, blocker resolved (empty open set) ⇒ phase 1 is ready again. Satisfying it IS the unblock.
+check(
+  select(multiTrack, doneAfter0, new Set()) === 1,
+  `F: dismissing the blocker must make phase 1 ready again, got ${select(multiTrack, doneAfter0, new Set())}`,
+);
+
+// ── Proof G: all-remaining-blocked ⇒ stop, not spin (distinct from cycle) ─────────────────────────────
+// A 2-phase chain with phase 1 done-able but blocked: after 0, the only candidate (1) is blocked ⇒
+// empty ready-set with work left ⇒ orchestrate stops ("awaiting human"), never loops.
+const twoPhase = [
+  { id: 0, depends_on: [] },
+  { id: 1, depends_on: [0] },
+];
+const afterAll = new Set([0]);
+check(
+  readySet(twoPhase, afterAll, new Set([1])).length === 0,
+  "G: with the only remaining phase blocked, the ready-set is empty (stop, don't spin)",
+);
+check(
+  readySet(twoPhase, afterAll, new Set()).length === 1,
+  "G: and once resolved, that phase is ready again (the loop resumes)",
+);
+
+// ── Proof H: parking-lot never affects the ready-set ─────────────────────────────────────────────────
+// Parking-lot items are NOT in the openBlockers set, so a phase carrying only parking-lot notes is ready.
+check(
+  select(multiTrack, doneAfter0, new Set()) === 1,
+  "H: a phase with only parking-lot items (no blocker) is unaffected — still ready",
+);
+
 // ── Report ───────────────────────────────────────────────────────────────────
 if (problems.length) {
   console.error(`✗ ready-set proof FAILED (${problems.length}):\n`);
   for (const p of problems) console.error(`  - ${p}`);
   process.exit(1);
 }
-console.log("✓ ready-set proof passed — A parallel · B resumable · C flat==linear · D deadlock-guarded.");
+console.log(
+  "✓ ready-set proof passed — A parallel · B resumable · C flat==linear · D deadlock · E blocker-excludes · F resolve-reincludes · G all-blocked-stops · H parking-lot-inert.",
+);
