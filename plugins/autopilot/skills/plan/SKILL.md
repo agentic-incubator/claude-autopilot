@@ -72,14 +72,26 @@ sharpen the acceptance criteria now, not mid-run.
 3. **Brainstorm if the scope is still ambiguous.** Even with a healthy score, use
    `superpowers:brainstorming` (when available) to surface unknowns and force decisions before they
    calcify into a bad plan.
-4. **Decompose into phases.** Find the natural seams: data model before the logic that uses it; a
-   primitive before the feature built on it; the happy path before hardening. Each phase should be
-   reviewable on its own and leave the build green. Set `depends_on:` where order is load-bearing.
-   **Keep the plan one coherent concern.** If you discover an _unrelated_ new requirement while scoping
-   (or the user raises one mid-run), it becomes a **separate queued pipeline** — its own `feature_id`,
-   its own integration PR — not a bolted-on phase here. A pipeline that tries to ship two unrelated
-   concerns produces an integration PR no human can review cleanly. Queue it (step 7) and keep this plan
-   focused.
+4. **Decompose into phases + wire the work graph.** Find the natural seams: data model before the logic
+   that uses it; a primitive before the feature built on it; the happy path before hardening. Each phase
+   should be reviewable on its own and leave the build green.
+   - **Set `depends_on:` to encode the graph, not just linear order.** This is what `orchestrate`'s
+     dependency-aware ready-set walks: a phase runs once every id in its `depends_on` is gate-PASSED.
+     For multi-track scope (a system of several bounded contexts), declare the _real_ cross-track edges —
+     then an unblocked unit in one track can run ahead of a blocked one in another, instead of a false
+     single line. Leave `depends_on` empty only when a phase truly has no prerequisites (empty-everywhere
+     ⇒ plain linear order, exactly as before). Keep it a DAG — no cycles (orchestrate stops on one).
+   - **Tag each phase's `track:`** with its bounded context for multi-track features (it groups the plan
+     and, when beads is present, becomes the epic). Single-track plans leave it empty.
+   - **Let ruflo build the first draft when available.** If `accelerators.ruflo` is set, drive its
+     `planner` / `task-orchestrator` to propose the decomposition, dependency edges, critical path, and
+     per-unit risk (its ReasoningBank recall from step 1 sharpens estimates/risk). You then _curate_ that
+     into phases — you own the final graph; ruflo drafts it. Degrade: decompose inline as above.
+   - **Keep the plan one coherent concern.** If you discover an _unrelated_ new requirement while scoping
+     (or the user raises one mid-run), it becomes a **separate queued pipeline** — its own `feature_id`,
+     its own integration PR — not a bolted-on phase here. A pipeline that tries to ship two unrelated
+     concerns produces an integration PR no human can review cleanly. Queue it (step 7) and keep this plan
+     focused.
 5. **Mark the risky phases.** Put the ids of phases with real blast radius (merge/auth/security logic,
    anything that executes generated edits) into `risk_phases:` — that's where orchestrate runs the
    expensive adversarial passes. Keep it small; everything gets the Tier-3 review regardless.
@@ -124,6 +136,16 @@ sharpen the acceptance criteria now, not mid-run.
    the most recent one describes the current phases. Read `at` from git (`git log -1 --format=%cI`); never
    invent a clock value. Commit this line together with `pipeline.yml`. (Ledgers from before this record
    existed can be retrofitted — see `docs/lifecycle.md`.)
+9. **Sync the work graph to beads — projection only, if available.** _(Active plans only; a queued plan
+   syncs at promotion, never while parked.)_ When `profile.accelerators.beads` is set, mirror the plan
+   into `bd` so the graph is queryable/visualizable (`bd ready`, `bd dep tree`): one **epic per `track:`**,
+   one **issue per phase** (title = goal, `acceptance` = the machine-checkable DoD lines, `adrs:`/`ddd:`
+   as labels), and a **`blocks` edge for each `depends_on`** edge. This is a **projection, never the
+   source of truth** — `pipeline.yml` + git markers stay authoritative, the sync is **one way**
+   (pipeline → beads), and everything must remain reconstructable from the repo with beads absent. If
+   beads is unavailable, skip this entirely — the graph already lives in `pipeline.yml depends_on` and
+   nothing downstream depends on the projection. See
+   `docs/adr/0001-dependency-aware-work-graph-beads-ruflo.md`.
 
 ## After writing
 
