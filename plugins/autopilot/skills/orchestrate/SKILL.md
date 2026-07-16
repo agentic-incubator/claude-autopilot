@@ -30,10 +30,16 @@ You operate in one of two modes, set by `autonomy:` in `.autopilot/pipeline.yml`
 
 Read the matching playbook in full before acting:
 
-- reviewed → `references/mode-reviewed.md`
-- pr_ci → `references/mode-pr-ci.md`
+- reviewed → `references/mode-reviewed.md` (**always serial** — one phase per firing, regardless of
+  `max_parallel`)
+- pr_ci, `max_parallel: 1` (default) → `references/mode-pr-ci.md`
+- pr_ci, `max_parallel > 1` → `references/mode-pr-ci-parallel.md` — keep several **independent** ready
+  units in flight at once (each in its own git worktree + phase branch), but land every merge through a
+  **single serialized, re-gated queue** so a stale-base conflict can never merge. Governed by
+  `docs/adr/0002-parallel-ready-units-merge-queue.md`. `max_parallel: 1` collapses this to `mode-pr-ci.md`
+  exactly, so parallelism is strictly opt-in.
 
-The two share the state model and invariants below.
+All modes share the state model and invariants below.
 
 ## State lives outside the conversation
 
@@ -74,9 +80,15 @@ carries everything else as compact summaries.
      - If `accelerators.beads` is set, `bd ready` should agree — use it as a cross-check/visualization,
        never as the authority. Reconcile **one way: sync bead status _from_ the markers**, never the
        reverse. Git markers decide.
-   - **Termination / deadlock** — ready-set empty AND every phase PASSED → optimization pass (see
-     playbook), then end the loop. Ready-set empty with un-done phases remaining means a `depends_on`
-     cycle or an unsatisfiable dependency: **stop and report it — never spin.**
+     - In pr_ci **parallel** mode (`max_parallel > 1`) also subtract the **in-flight** set — the phase
+       branches already claimed on origin (`git ls-remote --heads origin "autopilot/<feature_id>/phase-*"`)
+       — and dispatch up to `max_parallel` ready units this firing instead of one. The parallel playbook
+       (`references/mode-pr-ci-parallel.md`) owns that; here just know the ready-set is the same set minus
+       what's already claimed.
+   - **Termination / deadlock** — ready-set empty AND every phase PASSED (and, in parallel, nothing
+     in-flight) → optimization pass (see playbook), then end the loop. Ready-set empty with un-done phases
+     remaining and nothing in flight means a `depends_on` cycle or an unsatisfiable dependency: **stop and
+     report it — never spin.**
 2. **Resume check.** Before starting fresh, look for in-flight work for phase N (an open PR, a pushed
    branch, a half-done local tree) and resume it rather than restarting. The playbooks enumerate the
    exact interruption windows to check — covering them is what makes re-firing safe.
@@ -86,14 +98,24 @@ carries everything else as compact summaries.
    PASS) the scoped marker; persist a compact summary, and STOP (or, in pr_ci, background the CI wait so
    you idle without burning tokens until checks finish).
 
-## Invariants (both modes)
+## Invariants (all modes)
 
-- **One phase per firing.** Never start phase N+1 in the firing that completed phase N. Grinding phases
-  into one context defeats the memory design and is how long runs drift.
+- **One phase per firing per lane.** In serial modes (reviewed, or pr_ci `max_parallel: 1`) that means
+  one phase, full stop — never start phase N+1 in the firing that completed N. In pr_ci parallel
+  (`max_parallel > 1`) it means one unit **per slot**, up to `max_parallel` concurrent slots — but a
+  firing still never grinds one slot's phase into the next; each slot is its own fresh-context unit, and
+  **merges are always serialized** (one at a time through the queue). Grinding phases into one context
+  defeats the memory design.
 - A phase advances **only** on a real green gate (reviewed) or green required CI checks (pr_ci). No
-  skipped/ignored tests to force a pass.
+  skipped/ignored tests to force a pass. In parallel mode the merging unit is additionally **re-gated
+  against the current `base`** before it lands (rebase → CI re-run → merge) — a green-against-stale-base
+  result never merges.
 - `trunk` is **never** merged autonomously — a human merges the final integration PR.
-- **Never force-push** to `base` or `trunk`. Fix-loops push only to the phase branch.
+- **Never force-push** to `base` or `trunk`. Fix-loops and rebases push only to a **phase branch**
+  (parallel mode may `--force-with-lease` a phase branch to land a rebase; `base`/`trunk` never).
+- A merge conflict is **never hand-resolved** under autonomy — it re-queues the unit for a fresh
+  re-implementation against the advanced base, and escalates to a human after `K = 2` conflict-requeues
+  (pr_ci parallel only).
 - The agent never self-certifies: in pr*ci, remote CI is the merge authority — and a PR that ran ZERO
   required checks is \_skipped*, never green. Never merge a check-less PR (that is self-certification by
   another name). Base CI coverage is a hard prereq for exactly this reason.

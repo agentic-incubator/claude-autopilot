@@ -92,9 +92,10 @@ locally before committing:
   the manifests are valid JSON, versions agree, every `README.md` command reference has a
   matching `commands/*.md`, and every `skills/*/` directory has a `SKILL.md` whose frontmatter
   `name` matches the directory and carries a `description`.
-- `pnpm run proof` — `scripts/verify-ready-set.mjs` (plain Node) proves the dependency-aware
-  ready-set's properties (parallel ready units, resumability, flat==linear, deadlock guard) from
-  ADR-0001. Runs inside `check`.
+- `pnpm run proof` — two plain-Node proofs, run inside `check`: `scripts/verify-ready-set.mjs` proves
+  the ADR-0001 ready-set (parallel ready units, resumability, flat==linear, deadlock guard), and
+  `scripts/verify-parallel-merge-queue.mjs` proves the ADR-0002 parallel model (claim atomicity,
+  admission control, cap1==serial, serialized re-gated merge, conflict escalation, exactly-once).
 - `pnpm run check` — `validate` + `proof` + Prettier + markdownlint.
 - `pnpm run link-check` — verifies markdown links resolve (needs network).
 

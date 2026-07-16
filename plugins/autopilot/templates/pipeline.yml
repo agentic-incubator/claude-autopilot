@@ -49,6 +49,16 @@ autonomy: reviewed
 
 fix_budget: 5                      # CI-fix iterations per PR before handing off (pr_ci mode)
 
+# Parallel execution of independent ready units (pr_ci mode only — see
+# plugins/autopilot/docs/adr/0002-parallel-ready-units-merge-queue.md). Default 1 = serial, identical
+# to a single-phase-per-firing pipeline. Set >1 to let orchestrate implement several dependency-ready
+# units at once (each in its own git worktree + phase branch), merging them ONE AT A TIME through a
+# rebase-and-re-gate queue so a stale-base conflict can never merge. `reviewed` mode ignores this and
+# always runs serially.
+max_parallel: 1                    # 1 = serial (default). >1 = up to N concurrent ready units.
+requeue_budget: 2                  # in-queue rebase/re-gate retries before a conflicted unit is
+                                   # dropped back to not-started and re-implemented against the new base.
+
 # Phases where the expensive adversarial passes (mutation / pentest / chaos) are worth it.
 # Empty = run the lightweight gate everywhere, heavy passes nowhere.
 risk_phases: []
@@ -82,6 +92,12 @@ phases:
     # order — identical to a flat linear pipeline. Declare deps across tracks to unblock true DAG
     # ordering (a later-id phase can run before an earlier one that's still blocked).
     depends_on: []
+    # Files/areas this phase is expected to modify (globs). ONLY used when max_parallel > 1: two
+    # dependency-ready units are dispatched concurrently only if their `touches` sets are DISJOINT —
+    # overlap (or an empty/unknown set) means run them serially instead. Advisory, not enforced: the
+    # merge-queue re-gate is the real safety net, so a missed overlap just costs a re-queue, never a bad
+    # merge. Ignored entirely when max_parallel is 1. See ADR-0002.
+    touches: []                     # e.g. ["src/billing/**", "migrations/**"]
     # The SLICE of the design corpus this phase must read & honor (names/globs/ids, not whole dirs).
     # This is how comprehension stays cheap: a phase reads only the ADRs/DDD aggregates it touches.
     adrs:  []                       # e.g. ["ADR-007-merge-strategy", "ADR-010-authz"]

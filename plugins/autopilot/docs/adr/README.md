@@ -12,4 +12,4 @@ and templates the decision governs.
 | ADR                                                     | Status   | Summary                                                                                   |
 | ------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------- |
 | [0001](0001-dependency-aware-work-graph-beads-ruflo.md) | Accepted | Dependency-aware work graph: beads projection + ruflo planning brain, git-authoritative   |
-| [0002](0002-parallel-ready-units-merge-queue.md)        | Proposed | Parallel execution of ready units via a gated merge queue; conflict ⇒ re-queue, not merge |
+| [0002](0002-parallel-ready-units-merge-queue.md)        | Accepted | Parallel execution of ready units via a gated merge queue; conflict ⇒ re-queue, not merge |

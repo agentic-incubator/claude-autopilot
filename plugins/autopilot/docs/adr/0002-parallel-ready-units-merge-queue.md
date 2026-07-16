@@ -1,12 +1,12 @@
 # ADR-0002 — Parallel execution of ready units (merge-queue-gated, conflict-as-requeue)
 
-| Field         | Value                                                                 |
-| ------------- | --------------------------------------------------------------------- |
-| **Status**    | Proposed                                                              |
-| **Date**      | 2026-07-15                                                            |
-| **Deciders**  | autopilot maintainers                                                 |
-| **Governs**   | (future) `skills/orchestrate`, `templates/pipeline.yml`, `pr_ci` mode |
-| **Builds on** | [ADR-0001](0001-dependency-aware-work-graph-beads-ruflo.md)           |
+| Field         | Value                                                        |
+| ------------- | ------------------------------------------------------------ |
+| **Status**    | Accepted                                                     |
+| **Date**      | 2026-07-15 (proposed) · 2026-07-15 (accepted)                |
+| **Deciders**  | autopilot maintainers                                        |
+| **Governs**   | `skills/orchestrate`, `templates/pipeline.yml`, `pr_ci` mode |
+| **Builds on** | [ADR-0001](0001-dependency-aware-work-graph-beads-ruflo.md)  |
 
 ## Context
 
@@ -95,18 +95,31 @@ New:
 | beads present                | `bd` mirrors claims/queue as a **projection** only; git stays authoritative.     |
 | Touch-sets absent/unreliable | Fall back to `max_parallel: 1` for the affected units, or rely on queue re-gate. |
 
-## Open questions (to resolve before Accepted)
+## Resolved decisions (were open questions at Proposed)
 
-- **Claim representation:** lock branch vs. a claim-marker commit vs. a committed `.autopilot/claims/`
-  record — which is cleanest to reconcile and least prone to orphaned locks (e.g. a crashed driver)?
-- **Touch-sets:** author-declared vs. inferred from `deliverables`/history? How strict a mismatch check?
-- **Re-gate × `fix_budget`:** does a queue re-gate failure consume the phase's fix budget, or get its
-  own budget? How many rebase-retries before re-queue?
-- **Fairness/starvation:** can a long critical-path unit starve short ready units in the queue?
-- **Ledger schema:** how does `runs/<feature_id>.jsonl` record concurrent firings and re-queues so the
-  history stays replayable?
-- **Worktree lifecycle:** creation/cleanup, disk pressure, and recovery of a worktree abandoned by a
-  dead driver.
+- **Claim representation → the phase branch _is_ the claim.** Claiming unit N means pushing its phase
+  branch `autopilot/<feature_id>/phase-N` to origin; the push is atomic, so a second driver racing for
+  the same unit loses (`push` rejected — branch already exists) and moves on. No separate lock artifact.
+  In-flight units are enumerable with `git ls-remote --heads origin "autopilot/<feature_id>/*"`, so the
+  claim set is fully reconstructable from git. **Orphan recovery:** a phase branch with no open PR and no
+  new commits for a stale interval (and whose phase has no PASSED marker) is reclaimable — delete it and
+  re-dispatch. beads, if present, mirrors claims as a projection only; it never holds authority.
+- **Touch-sets → optional, author-declared, advisory.** `touches:` globs on a phase gate _co-dispatch_
+  only (two ready units run concurrently only if disjoint; empty/unknown ⇒ don't co-dispatch). Not
+  enforced against the actual diff in v1 — the merge-queue re-gate is the real safety net, so a missed
+  overlap costs at most a re-queue, never a bad merge.
+- **Re-gate × `fix_budget` → a separate `requeue_budget` (default 2).** An in-queue rebase/re-gate
+  failure caused by a _sibling's_ merge is not the phase's own bug, so it draws from `requeue_budget`,
+  not `fix_budget`. Exhausting it drops the unit to not-started for a fresh re-implementation.
+- **Fairness/starvation → FIFO merge queue by green-arrival; dispatch prefers the critical path.** A unit
+  that fails re-gate re-queues (freeing the queue head) rather than blocking it; a unit re-queued **twice**
+  (`K = 2`) escalates to a human instead of looping.
+- **Ledger schema → append-only, extended.** Firing records gain `parallel_slot` and `claim` (the phase
+  branch); a new `"type":"requeue"` record logs each drop-and-redo. Lines interleave by `at` and stay
+  self-describing, so the run remains replayable; git markers remain the authority.
+- **Worktree lifecycle → one git worktree per slot under git-ignored `.autopilot/worktrees/<feature_id>/
+phase-N`.** Created at dispatch, removed on merge or re-queue; each firing prunes worktrees whose phase
+  branch is gone or whose phase is now PASSED. Disk is bounded by `max_parallel`.
 
 ## Consequences
 

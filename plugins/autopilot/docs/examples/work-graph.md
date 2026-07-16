@@ -47,8 +47,9 @@ then **select the lowest-id ready phase**. No conversation memory; the done-set 
 | 7      | {0,1,2,3,4,5}           | {6}             | 6        | integration unblocks once all tracks are done   |
 | 8      | {0,1,2,3,4,5,6}         | {} + all PASSED | —        | ready-set empty & all done → optimization → END |
 
-The parallelism is **surfaced** (firing 2 shows three ready units); v1 still runs **one phase per
-firing**, picking the lowest id. True concurrent execution is a deferred follow-on (ADR-0001).
+The parallelism is **surfaced** (firing 2 shows three ready units). By default autopilot picks the
+lowest-id one — **one phase per firing**. Setting `max_parallel > 1` lets it run those ready units
+concurrently through a serialized merge queue (see [below](#with-max_parallel--1-opt-in-pr_ci)).
 
 ## The three proofs (all machine-checked)
 
@@ -64,6 +65,25 @@ firing**, picking the lowest id. True concurrent execution is a deferred follow-
 
 A fourth check guards **deadlock**: a dependency cycle yields an empty ready-set with work remaining,
 which `orchestrate` reports instead of spinning.
+
+## With `max_parallel > 1` (opt-in, `pr_ci`)
+
+The same graph, run with `max_parallel: 3` and disjoint `touches:` per track, dispatches the three ready
+units from firing 2 **concurrently** instead of one-at-a-time:
+
+| Wave | Dispatched concurrently (slots) | Merged (serially, via the queue)            |
+| ---- | ------------------------------- | ------------------------------------------- |
+| 1    | 0                               | 0                                           |
+| 2    | 1, 3, 5 (auth/billing/notif)    | 1, then 3, then 5 — one at a time, re-gated |
+| 3    | 2, 4                            | 2, then 4                                   |
+| 4    | 6 (integration)                 | 6                                           |
+
+Each slot works in its own worktree; the **merge queue stays width-1**, rebasing each PR onto the
+current `base` and re-gating before it lands. If phases 1 and 3 had _overlapping_ `touches:`, admission
+control would run them serially instead; if a rebase genuinely conflicted, the unit would re-queue (redo
+against the new base), escalating to a human after two attempts. All of this is machine-checked by
+`scripts/verify-parallel-merge-queue.mjs` (`pnpm run proof`). Full design:
+[ADR-0002](../adr/0002-parallel-ready-units-merge-queue.md).
 
 ## Where beads fits (optional)
 
