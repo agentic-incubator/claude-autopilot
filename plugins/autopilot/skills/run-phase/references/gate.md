@@ -117,8 +117,9 @@ Firing records, one JSON object per line, schema:
 }
 ```
 
-- `verdict` — `"PASSED"` or `"FAILED"`. On FAILED, `failed` lists the red check names and `marker` is
-  `null`.
+- `verdict` — `"PASSED"`, `"FAILED"`, or `"BLOCKED"`. On FAILED, `failed` lists the red check names and
+  `marker` is `null`. `"BLOCKED"` is a _distinct_ stop reason (a missing prerequisite, not a red check —
+  see `references/discovered.md`): `marker` is `null`, and it consumes no `fix_budget`/`requeue_budget`.
 - `skipped` — checks reported skipped (empty command), so a reader sees what was _not_ verified.
 - `ci_attempts` — count of `ci attempt` commits on the phase branch (pr_ci); `0` in reviewed mode.
 - `pr` — phase PR URL in pr_ci, else `null`.
