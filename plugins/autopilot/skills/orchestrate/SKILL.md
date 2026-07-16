@@ -73,7 +73,14 @@ carries everything else as compact summaries.
      highest): `git log --oneline | grep -E "\(autopilot:<feature_id>\): phase .* gate PASSED"`.
    - **Ready-set** — read only the cheap `(id, depends_on)` skeleton of the `phases:` list (NOT the
      phase bodies — that preserves the memory contract). A phase is **ready** when it has no PASSED
-     marker AND every id in its `depends_on` is in the done-set. **Target N = the lowest-id ready phase.**
+     marker, every id in its `depends_on` is in the done-set, **and it has no _open_ blocker**.
+     **Target N = the lowest-id ready phase.**
+     - **Open-blocker exclusion** (ADR-0003) — a phase whose latest `.autopilot/discovered/<feature_id>.jsonl`
+       item with `blocks: <that phase>` is still `open` is **not ready**, so `orchestrate` never re-runs a
+       blocked unit in a tight loop. It becomes ready again only when a human promotes the blocker (adds a
+       prerequisite phase to its `depends_on` — satisfied via the done-set) or dismisses it (corrects the
+       DoD) via `/autopilot-plan`. Parking-lot items never affect the ready-set. Read the log cheaply
+       (latest status per `id`); absent log ⇒ nothing excluded.
      - Empty `depends_on` on every phase ⇒ the ready-set is "all un-done phases" and lowest-id selection
        yields N = P+1 — **identical to a flat linear pipeline**. The graph only changes selection once
        deps are declared (then a later-id phase may run before an earlier one still blocked).
@@ -85,10 +92,12 @@ carries everything else as compact summaries.
        — and dispatch up to `max_parallel` ready units this firing instead of one. The parallel playbook
        (`references/mode-pr-ci-parallel.md`) owns that; here just know the ready-set is the same set minus
        what's already claimed.
-   - **Termination / deadlock** — ready-set empty AND every phase PASSED (and, in parallel, nothing
-     in-flight) → optimization pass (see playbook), then end the loop. Ready-set empty with un-done phases
-     remaining and nothing in flight means a `depends_on` cycle or an unsatisfiable dependency: **stop and
-     report it — never spin.**
+   - **Termination / deadlock / blocked** — ready-set empty AND every phase PASSED (and, in parallel,
+     nothing in-flight) → optimization pass (see playbook), then end the loop. Ready-set empty with
+     un-done phases remaining and nothing in flight → **stop and report, never spin** — and say _why_:
+     if the only thing holding the remaining phases is **open blockers**, it's "⏸ awaiting human — resolve
+     the open blocker(s) via `/autopilot-status` → `/autopilot-plan`"; otherwise it's a `depends_on` cycle
+     or an unsatisfiable dependency. Both stop; only the message differs.
 2. **Resume check.** Before starting fresh, look for in-flight work for phase N (an open PR, a pushed
    branch, a half-done local tree) and resume it rather than restarting. The playbooks enumerate the
    exact interruption windows to check — covering them is what makes re-firing safe.

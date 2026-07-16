@@ -82,6 +82,11 @@ For each claimed unit, in its own worktree (these run concurrently across slots)
    Ensure .autopilot/worktrees/ is git-ignored (add it if missing, same idempotent pattern as queued/).
 2. IMPLEMENT: delegate to `run-phase` inside that worktree (TDD, conventions, security invariants).
    Commit + push frequently to the phase branch — the remote branch is the durable resume point.
+   - If `run-phase` returns **BLOCKED** (a missing prerequisite — ADR-0003): it has already recorded the
+     blocker in `.autopilot/discovered/<feature_id>.jsonl`. **Release the claim** — delete the phase
+     branch (origin + local) and its worktree — and do NOT open a PR. The open blocker keeps this unit out
+     of the ready-set (SKILL.md step 1) until a human resolves it; the freed slot goes to another ready
+     unit. Sibling slots are unaffected — a blocker halts only its own unit.
 3. LOCAL PRE-PR GATE: run run-phase's gate green BEFORE opening the PR (saves CI minutes).
 4. OPEN PR: gh pr create --base <base> --head autopilot/<feature_id>/phase-N
      --title "feat(autopilot:<feature_id>): phase N — <summary>" --body "<deliverables · DoD evidence>".
