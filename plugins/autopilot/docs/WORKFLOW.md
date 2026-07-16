@@ -120,6 +120,41 @@ phase can pass.
 The invariant across every column: **a red gate never advances, and a missing accelerator never fails
 the gate** — accelerators change speed and depth, not the pass/fail meaning.
 
+## Parallel execution (opt-in, `pr_ci` only)
+
+By default autopilot runs **one phase per firing**. On a wide multi-track feature the ready-set often
+holds several independent units at once (e.g. `{1,3,5}` across three bounded contexts). Setting
+`max_parallel: N` (> 1) in `pipeline.yml` lets `pr_ci` mode implement up to N of them concurrently —
+**without** risking merge hell, because it separates the two things:
+
+- **Implementation is parallel.** Each ready+admissible unit runs in its **own git worktree** on its own
+  phase branch. **Pushing that branch _is_ the claim** — the push is atomic, so two drivers never grab
+  the same unit, and the in-flight set is just `git ls-remote` (no memory, no beads needed).
+- **Merging is serial.** Every green PR lands through a **width-1 merge queue**: rebase onto the current
+  `base` → re-run CI → merge, one at a time. The unit that merges is always re-tested against the base
+  it actually lands on, so "green alone, red together" is caught **before** it merges.
+
+```mermaid
+flowchart LR
+    RS["ready-set<br/>{1,3,5}"] -->|dispatch ≤ max_parallel,<br/>disjoint touches| S1["slot: phase 1<br/>(worktree+branch=claim)"]
+    RS --> S3["slot: phase 3"]
+    RS --> S5["slot: phase 5"]
+    S1 -->|green| Q{{"merge queue<br/>(width 1)"}}
+    S3 -->|green| Q
+    S5 -->|green| Q
+    Q -->|rebase→re-gate→merge| BASE[("base")]
+    Q -.->|rebase conflict| RQ["re-queue:<br/>redo phase vs new base<br/>(escalate after K=2)"]
+    RQ -.-> RS
+```
+
+Two guards keep it safe: **touch-set admission** (declare a phase's `touches:` globs; overlapping units
+run serially, not concurrently) and **conflict ⇒ re-queue, never hand-merge** (a rebase conflict drops
+the unit back to not-started to be re-implemented against the advanced base; after `K = 2` conflict-
+requeues it escalates to a human). `reviewed` mode is **always serial**, and `max_parallel: 1` is
+byte-for-byte the single-phase behavior — parallelism is strictly opt-in. Full design:
+[ADR-0002](adr/0002-parallel-ready-units-merge-queue.md); the operational playbook:
+`plugins/autopilot/skills/orchestrate/references/mode-pr-ci-parallel.md`.
+
 ## Running more than one pipeline over time
 
 A repo isn't done after one feature. The lifecycle for coexisting pipelines is
