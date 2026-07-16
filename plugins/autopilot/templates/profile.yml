@@ -82,6 +82,14 @@ accelerators:
   #   Also exposes requirements_validate / qe_requirements_quality-criteria — used by `plan` step 1.5
   #   to score spec readiness when present.
   agentic_qe:   { available: false, scope: "" }
+  # beads (bd) → a PROJECTION of the phase work graph, never the source of truth (git markers +
+  #   pipeline.yml stay authoritative; sync is one-way markers→beads). When available, `plan` mirrors
+  #   the graph as epics(track)/issues(phase)/tasks(DoD) with blocks edges, and orchestrate can
+  #   `bd ready` to cross-check the git-derived ready-set. Absent: the ready-set is computed from
+  #   pipeline.yml depends_on + markers alone (identical correctness — only the queryable view is gone).
+  #   Detected by probing PATH (`bd`, global) and the project (a `.beads/` dir).
+  #   See plugins/autopilot/docs/adr/0001-dependency-aware-work-graph-beads-ruflo.md.
+  beads:        { available: false, scope: "" }   # scope: "global" | "project" | ""
   # the /code-review skill/command — the Tier-3 floor, assumed present in Claude Code.
   code_review:  { available: true,  scope: "global" }
   # ── planning (skill-based; scope: "skill" | "") ──────────────────────────────

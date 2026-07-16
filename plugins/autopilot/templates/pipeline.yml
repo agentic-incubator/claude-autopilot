@@ -59,6 +59,11 @@ risk_phases: []
 phases:
   - id: 0
     goal: "What this phase makes true that wasn't before."
+    # Optional track/bounded-context this phase belongs to. Purely a label for multi-track features
+    # (a system of several bounded contexts): it groups phases for readability and, when beads is
+    # present, becomes the epic a unit hangs under. Omit it and nothing changes — single-track plans
+    # need no tracks. See plugins/autopilot/docs/adr/0001-dependency-aware-work-graph-beads-ruflo.md.
+    track: ""                        # e.g. "billing" | "identity" | "" (untracked)
     deliverables:
       - "Concrete artifact 1 (a module, an endpoint, a migration...)."
       - "Concrete artifact 2."
@@ -71,7 +76,12 @@ phases:
       - "prose: behaviour X is documented in the spec and realized in code at <path>"
     # Optional per-phase hints fed into the runner's 'match the house style' step.
     conventions: ""
-    depends_on: []                 # phase ids that must be gate-PASSED before this one starts
+    # Phase ids that must be gate-PASSED before this one may start. This is the WORK GRAPH:
+    # orchestrate runs the dependency-aware ready-set (a phase is ready when it isn't PASSED and every
+    # depends_on id IS PASSED), picking the lowest-id ready phase. Leave it empty and phases run in id
+    # order — identical to a flat linear pipeline. Declare deps across tracks to unblock true DAG
+    # ordering (a later-id phase can run before an earlier one that's still blocked).
+    depends_on: []
     # The SLICE of the design corpus this phase must read & honor (names/globs/ids, not whole dirs).
     # This is how comprehension stays cheap: a phase reads only the ADRs/DDD aggregates it touches.
     adrs:  []                       # e.g. ["ADR-007-merge-strategy", "ADR-010-authz"]
