@@ -17,6 +17,27 @@ output is `.autopilot/pipeline.yml`. The quality of this file decides whether th
 succeeds — a vague Definition of Done can't be gated, so a misphrased plan is how an unattended run
 either stalls or merges something wrong. Spend the effort here; it's the cheapest place to fix things.
 
+## First: are there open blockers to action?
+
+If `.autopilot/discovered/<feature_id>.jsonl` has any **open blockers** (latest status per `id` is
+`open`, `kind:blocker`), the user likely invoked you to _resolve_ one, not to author a fresh plan — a
+blocker is a phase that stopped because a prerequisite doesn't exist (ADR-0003;
+`run-phase/references/discovered.md`). For each blocker the user chooses to action, pick exactly one —
+then **append a status transition** to the log (`{"ref":"<id>","status":"promoted"|"dismissed","at":"<git time>"}`;
+append-only, never mutate) so `/autopilot-status` and the ready-set stop treating it as open:
+
+- **Fold into this pipeline** (the prerequisite belongs to this feature) → insert a new phase for it and
+  add that phase's id to the blocked phase's `depends_on:`. The ready-set then schedules the prerequisite
+  first and the blocked phase becomes ready once it's PASSED — satisfying the dependency _is_ the unblock,
+  no special command. Re-seed the ledger like any re-plan. Stamp the blocker `promoted`.
+- **Queue as its own concern** (the prerequisite is separable) → author it as a queued pipeline (step 7:
+  it parks at `.autopilot/queued/<id>.pipeline.yml` because one pipeline is active). Stamp `promoted`.
+- **Dismiss / re-scope** (it wasn't actually needed) → correct the blocked phase's `definition_of_done`
+  so the phase can pass on its own. Stamp `dismissed`.
+
+Commit the transition (and any `pipeline.yml` edit) together. Then the user runs `/autopilot-run` to
+resume. If instead you're authoring a new plan, continue below.
+
 ## What good output looks like
 
 A handful of **independently shippable** phases, ordered by dependency, where each phase:
