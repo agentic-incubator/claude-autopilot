@@ -147,8 +147,10 @@ sync step; docs/schema surface grows. The v1 line ("select one, don't fan out") 
 _surfaced but not yet exploited_ — deliberately, to protect the one-concern-per-PR invariant until a
 follow-on designs safe concurrent execution.
 
-**Deferred (follow-on ADR):** true parallel execution of multiple ready units (git worktrees / multiple
-`/loop` drivers / bead claim-locking), and whether `discovered-from` work auto-promotes vs. stays queued.
+**Deferred:** true parallel execution of multiple ready units is specified in
+[ADR-0002](0002-parallel-ready-units-merge-queue.md) (Proposed) — a gated merge queue, touch-set
+admission control, git-native claim locking, and conflict-as-requeue. Also deferred: whether
+`discovered-from` work auto-promotes vs. stays queued.
 
 ## References
 
