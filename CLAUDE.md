@@ -92,7 +92,10 @@ locally before committing:
   the manifests are valid JSON, versions agree, every `README.md` command reference has a
   matching `commands/*.md`, and every `skills/*/` directory has a `SKILL.md` whose frontmatter
   `name` matches the directory and carries a `description`.
-- `pnpm run check` — `validate` + Prettier + markdownlint.
+- `pnpm run proof` — `scripts/verify-ready-set.mjs` (plain Node) proves the dependency-aware
+  ready-set's properties (parallel ready units, resumability, flat==linear, deadlock guard) from
+  ADR-0001. Runs inside `check`.
+- `pnpm run check` — `validate` + `proof` + Prettier + markdownlint.
 - `pnpm run link-check` — verifies markdown links resolve (needs network).
 
 Versioning and `CHANGELOG.md` are **automated** by release-please — do not hand-bump versions or
