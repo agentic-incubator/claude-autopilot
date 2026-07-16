@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.0](https://github.com/agentic-incubator/claude-autopilot/compare/v0.10.0...v0.11.0) (2026-07-16)
+
+
+### Features
+
+* discovered work — blockers & parking-lot ([#23](https://github.com/agentic-incubator/claude-autopilot/issues/23)) ([42c7ca0](https://github.com/agentic-incubator/claude-autopilot/commit/42c7ca032fab18695cc85f699f7905faef583710))
+
 ## [0.10.0](https://github.com/agentic-incubator/claude-autopilot/compare/v0.9.0...v0.10.0) (2026-07-16)
 
 
