@@ -11,7 +11,7 @@
   },
   "scripts": {
     "validate": "node scripts/validate-manifests.mjs",
-    "proof": "node scripts/verify-ready-set.mjs",
+    "proof": "node scripts/verify-ready-set.mjs && node scripts/verify-parallel-merge-queue.mjs",
     "format": "prettier --write \"**/*.md\" \"**/*.json\"",
     "format:check": "prettier --check \"**/*.md\" \"**/*.json\"",
     "lint": "markdownlint \"**/*.md\"",
