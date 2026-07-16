@@ -2,8 +2,8 @@
 
 | Field         | Value                                                                                                             |
 | ------------- | ----------------------------------------------------------------------------------------------------------------- |
-| **Status**    | Proposed                                                                                                          |
-| **Date**      | 2026-07-16                                                                                                        |
+| **Status**    | Accepted                                                                                                          |
+| **Date**      | 2026-07-16 (proposed) · 2026-07-16 (accepted)                                                                     |
 | **Deciders**  | autopilot maintainers                                                                                             |
 | **Governs**   | `skills/{plan,run-phase,orchestrate}`, `.autopilot/` layout, `/autopilot-status`                                  |
 | **Builds on** | [ADR-0001](0001-dependency-aware-work-graph-beads-ruflo.md), [ADR-0002](0002-parallel-ready-units-merge-queue.md) |
@@ -136,6 +136,10 @@ New:
   parallel claim/merge machinery (ADR-0001/0002) keep operating over a fixed `pipeline.yml`; discovered
   items live _beside_ it, not _in_ it, until a human promotes one.
 - **A blocker halts only its own unit** (in parallel mode); it is recorded, never silently worked around.
+- **An open blocker removes its phase from the ready-set** until the blocker is promoted/dismissed — so
+  `orchestrate` never re-runs a blocked unit in a tight loop. If every remaining unit is blocked (or
+  parked), the loop **stops and reports "awaiting human," never spins** (the same discipline as the
+  dependency-cycle guard in ADR-0001).
 - **beads holds no authoritative discovered state** — projection only.
 - **Recording a discovered item is always safe** (committed record, non-auto-starting), so an agent is
   never discouraged from noting what it finds.
@@ -148,19 +152,26 @@ New:
 | `reviewed` mode    | A blocker stops the (single) unit for human inspection — same as any gated stop.       |
 | No discovered work | The log simply doesn't exist; zero overhead.                                           |
 
-## Open questions (resolve before Accepted / implementation)
+## Resolved decisions (were open questions at Proposed)
 
-- **Classification — the crux.** How does an agent decide _blocker vs. parking-lot_ reliably? Options:
-  heuristic (does it block THIS phase's DoD?) with a bias toward parking-lot when unsure; or require a
-  human confirm for blockers. A wrong "parking-lot" that was really a blocker would silently drop needed
-  work; a wrong "blocker" just stops early (safe). Lean: **bias to parking-lot; only the phase's own
-  inability-to-gate promotes something to blocker.**
-- **`/autopilot-status` view** — exact rendering (open blockers first, parking-lot collapsed) and whether
-  it summarizes across features.
-- **Dedup** — the same tangent found in phases 2 and 5: one item or two (with two origins)?
-- **`fix_budget` interaction** — a blocker is _not_ a CI failure; it must not consume `fix_budget` or the
-  parallel `requeue_budget`. Confirm it's a distinct stop reason in the ledger.
-- **Retrofit** — repos with pre-0.11 ledgers have no `discovered/` log; creation is lazy (first item).
+- **Classification → bias to parking-lot; only an own-gate-blocker is a blocker.** An item is a
+  `blocker` **only** when the current phase cannot make its Definition of Done green without a prerequisite
+  that does not yet exist (a concrete, testable condition: run-phase can't reach a green gate because
+  something it depends on is missing). Everything else — anything merely _noticed_ — is `parking-lot`.
+  Rationale: a wrong "parking-lot" that was really a blocker only defers work a human still sees in the
+  lot; a wrong "blocker" stops a phase early. Both are recoverable, and the bias keeps the loud, work-
+  halting kind rare and high-signal.
+- **`/autopilot-status` → open blockers first (loud), parking-lot collapsed, per feature.** Each open
+  blocker renders `id · blocks: N · origin · note` and ends with `→ /autopilot-plan`. Read-only.
+- **Dedup → idempotent per (kind, blocks, note).** Before appending a `blocker`, if an **open** blocker
+  already exists for the same `blocks` phase with an equivalent note, skip it — re-firings never pile
+  duplicates. Parking-lot items are not auto-deduped (cheap; a human curates the lot); the same tangent
+  seen in two phases may legitimately be two items with two `origin`s.
+- **`fix_budget` → untouched; a blocker is a distinct stop reason.** A blocker is _not_ a CI/gate failure,
+  so it consumes neither `fix_budget` nor the parallel `requeue_budget`. run-phase records the firing's
+  verdict as **`"BLOCKED"`** in the ledger (distinct from `FAILED`), and stops.
+- **Retrofit → lazy.** `.autopilot/discovered/<feature_id>.jsonl` is created on the first item; repos
+  without it behave exactly as before (zero overhead, nothing to migrate).
 
 ## Consequences
 
