@@ -1,9 +1,12 @@
 # Autopilot — workflow & effort, step by step
 
 How a feature goes from spec to merged, and exactly where the optional power-ups plug in **only when
-detected** — _execution_ accelerators (ruflo / agentic-qe (aqe)) during implement+gate, and _planning_
-skills (superpowers / clarity / deep-research) during `plan`. Everything works without them; when
-present, autopilot actively drives them.
+detected** — _execution_ accelerators (ruflo / agentic-qe (aqe)) during implement+gate, the _work-graph_
+projection (beads) around sequencing, and _planning_ skills (superpowers / clarity / deep-research)
+during `plan`. Everything works without them; when present, autopilot actively drives them. Multi-track
+scope is sequenced by a **dependency-aware ready-set** computed from each phase's `depends_on:` — a
+git-native work graph that needs no tool (see
+[ADR-0001](adr/0001-dependency-aware-work-graph-beads-ruflo.md)).
 
 ## End-to-end flow
 
@@ -22,8 +25,8 @@ flowchart TD
     FILES --> RUN["/autopilot-run  →  autopilot:orchestrate (under /loop)"]
 
     subgraph LOOP["Per firing — ONE phase, fresh context"]
-        RUN --> STATE["Locate state:<br/>git grep '(autopilot:feature_id): … gate PASSED' → next phase N"]
-        STATE --> DONE{N past<br/>last phase?}
+        RUN --> STATE["Locate state:<br/>git grep '(autopilot:feature_id): … gate PASSED' → done-set<br/>→ dependency-aware ready-set → lowest-id ready phase N"]
+        STATE --> DONE{ready-set empty<br/>& all phases done?}
         DONE -->|yes| OPT["Optimization pass<br/>→ integration PR (base→trunk)<br/>→ END loop"]
         DONE -->|no| ACC{Accelerators<br/>available?}
         ACC -->|ruflo| RUFLO["ruflo memory recall<br/>swarm init --v3-mode<br/>spawn researcher→architect→coder→tester→reviewer"]
@@ -78,8 +81,8 @@ flowchart LR
 ## Artifacts & replay (what each run leaves behind)
 
 Every run is reconstructable from the target repo alone — no conversation memory, and (except where
-noted) no ruflo. Everything is scoped by `feature_id`, so running autopilot repeatedly in one repo keeps
-each feature's state cleanly separate.
+noted) no ruflo and no beads. Everything is scoped by `feature_id`, so running autopilot repeatedly in
+one repo keeps each feature's state cleanly separate.
 
 | Artifact                       | Where                                                                   | Role                                                                                                                                                                                                               |
 | ------------------------------ | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -88,6 +91,7 @@ each feature's state cleanly separate.
 | `pipeline.yml` / `profile.yml` | `.autopilot/` (committed)                                               | The plan + stack profile — editable, re-runnable                                                                                                                                                                   |
 | Branches / PRs (pr_ci)         | GitHub: `autopilot/<feature_id>/phase-N`, the integration PR            | In-flight resume points                                                                                                                                                                                            |
 | Phase summaries                | ruflo memory `autopilot` namespace — **only if ruflo present**          | Optional richer recall on later phases                                                                                                                                                                             |
+| Work-graph projection          | beads (`.beads/`) — **only if beads present**                           | Optional queryable/visual view of the graph (`bd ready`, `bd dep tree`); synced one-way from markers, never the authority — the graph itself lives in `pipeline.yml depends_on`                                    |
 
 The ledger is the human-readable companion to the markers: markers answer _where are we_, the ledger
 answers _how did each phase get there_ — including FAILED attempts, which never leave a marker. To

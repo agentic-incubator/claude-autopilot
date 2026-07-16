@@ -37,6 +37,13 @@ autopilot reads them all **once** while planning, then records on each phase a s
 documents that phase has to respect. Later, each phase re-reads only its own slice — never the whole
 stack. That's how a feature with a dozen design docs stays manageable.
 
+And the phases aren't just a straight line. When you're building something big — say a system with a
+dozen separate parts that depend on each other — the plan records which phase depends on which. Each
+time it runs, autopilot looks at what's already finished and picks the next phase whose prerequisites are
+all done. So a ready piece of one part can move ahead while an unrelated part is still waiting on
+something else, instead of everything stalling behind a single queue. (For a simple feature with no such
+links, this is just "do them in order" — exactly as you'd expect.)
+
 ---
 
 ## 3. ✅ The gate that can't be faked
@@ -65,28 +72,30 @@ The deep, illustrated version of this whole flow lives in the design reference:
 Every acronym and bit of jargon, in one place. You can use autopilot without knowing most of these —
 they're here for when you're curious.
 
-| Term            | Plain-English meaning                                                                                                                                                              |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Phase**       | One small, self-contained step of the feature. autopilot does one per run and each leaves your project working.                                                                    |
-| **Gate**        | The set of checks a phase must pass to count as done — your tests, build, a code review, and more. Can't be faked.                                                                 |
-| **Spec**        | Short for "specification" — the document (or sentence) describing what you want built. The source of truth for the plan.                                                           |
-| **git**         | Your project's built-in history of every change. autopilot stores its progress notes here so nothing is lost.                                                                      |
-| **Branch**      | A safe, separate copy of your code where work happens without touching the main version. autopilot makes these for you.                                                            |
-| **Trunk**       | Your project's main, official branch (usually called `main`). autopilot **never** merges into it on its own — a human always does the final merge.                                 |
-| **Base**        | A long-lived "integration" branch where autopilot collects finished phases before the final hand-off to you.                                                                       |
-| **PR**          | "Pull request" — a proposal on GitHub to merge one branch's changes into another, with a description and a place for review. autopilot opens these for you.                        |
-| **CI**          | "Continuous integration" — automated checks GitHub runs on every pull request (typically your tests). In autonomous mode, CI is the authority that decides a merge.                |
-| **Merge**       | Combining one branch's changes into another. autopilot merges finished phases into `base`; the final merge into `trunk` is always yours.                                           |
-| **TDD**         | "Test-driven development" — writing the test _before_ the code, so you always have proof the code does what's intended. autopilot builds every phase this way.                     |
-| **ADR**         | "Architecture Decision Record" — a short doc that records one design decision and why, e.g. _"all payment calls use idempotency keys."_ A rule the build must follow.              |
-| **DDD**         | "Domain-Driven Design" — docs that define your system's shared vocabulary and building blocks, e.g. what an _Invoice_ or _Charge_ means and how they relate.                       |
-| **PRD**         | "Product Requirements Document" — the doc explaining _why_ a feature exists and what counts as acceptable.                                                                         |
-| **DoD**         | "Definition of Done" — the checkable conditions a phase must meet. autopilot writes these so a machine can verify them, not just guess.                                            |
-| **`gh`**        | GitHub's command-line tool, which autopilot uses to open pull requests and merge them. Needed only for autonomous mode.                                                            |
-| **Accelerator** | An optional extra tool (ruflo, agentic-qe) that makes autopilot faster or its checks deeper. Always optional — see [Power-ups](power-ups.md).                                      |
-| **Queued plan** | A follow-up feature you scoped while another is still running. autopilot parks it on your machine (it won't start it) until you promote it — so the active run is never disturbed. |
-| **Promote**     | Turning a queued plan into the active one when the current feature finishes — a one-line step autopilot points you at. It never starts the next feature on its own.                |
-| **Retire**      | What happens to a finished plan: the next plan simply replaces it. Nothing is archived or lost — the old plan stays in your project's history and its own logbook.                 |
+| Term            | Plain-English meaning                                                                                                                                                                        |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Phase**       | One small, self-contained step of the feature. autopilot does one per run and each leaves your project working.                                                                              |
+| **Gate**        | The set of checks a phase must pass to count as done — your tests, build, a code review, and more. Can't be faked.                                                                           |
+| **Spec**        | Short for "specification" — the document (or sentence) describing what you want built. The source of truth for the plan.                                                                     |
+| **git**         | Your project's built-in history of every change. autopilot stores its progress notes here so nothing is lost.                                                                                |
+| **Branch**      | A safe, separate copy of your code where work happens without touching the main version. autopilot makes these for you.                                                                      |
+| **Trunk**       | Your project's main, official branch (usually called `main`). autopilot **never** merges into it on its own — a human always does the final merge.                                           |
+| **Base**        | A long-lived "integration" branch where autopilot collects finished phases before the final hand-off to you.                                                                                 |
+| **PR**          | "Pull request" — a proposal on GitHub to merge one branch's changes into another, with a description and a place for review. autopilot opens these for you.                                  |
+| **CI**          | "Continuous integration" — automated checks GitHub runs on every pull request (typically your tests). In autonomous mode, CI is the authority that decides a merge.                          |
+| **Merge**       | Combining one branch's changes into another. autopilot merges finished phases into `base`; the final merge into `trunk` is always yours.                                                     |
+| **TDD**         | "Test-driven development" — writing the test _before_ the code, so you always have proof the code does what's intended. autopilot builds every phase this way.                               |
+| **ADR**         | "Architecture Decision Record" — a short doc that records one design decision and why, e.g. _"all payment calls use idempotency keys."_ A rule the build must follow.                        |
+| **DDD**         | "Domain-Driven Design" — docs that define your system's shared vocabulary and building blocks, e.g. what an _Invoice_ or _Charge_ means and how they relate.                                 |
+| **PRD**         | "Product Requirements Document" — the doc explaining _why_ a feature exists and what counts as acceptable.                                                                                   |
+| **DoD**         | "Definition of Done" — the checkable conditions a phase must meet. autopilot writes these so a machine can verify them, not just guess.                                                      |
+| **`gh`**        | GitHub's command-line tool, which autopilot uses to open pull requests and merge them. Needed only for autonomous mode.                                                                      |
+| **Accelerator** | An optional extra tool (ruflo, agentic-qe, beads) that makes autopilot faster, its checks deeper, or its work graph visible. Always optional — see [Power-ups](power-ups.md).                |
+| **Work graph**  | The map of which phases depend on which. autopilot runs the next phase whose prerequisites are all finished (the "ready set"), so independent work isn't stuck behind a single line.         |
+| **beads**       | An optional tool (`bd`) that shows the work graph as a queryable picture — what's ready, what's blocked. Just a view: your git history stays the real record. See [Power-ups](power-ups.md). |
+| **Queued plan** | A follow-up feature you scoped while another is still running. autopilot parks it on your machine (it won't start it) until you promote it — so the active run is never disturbed.           |
+| **Promote**     | Turning a queued plan into the active one when the current feature finishes — a one-line step autopilot points you at. It never starts the next feature on its own.                          |
+| **Retire**      | What happens to a finished plan: the next plan simply replaces it. Nothing is archived or lost — the old plan stays in your project's history and its own logbook.                           |
 
 ---
 

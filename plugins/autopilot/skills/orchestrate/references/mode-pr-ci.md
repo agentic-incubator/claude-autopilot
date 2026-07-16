@@ -38,8 +38,11 @@ the harness re-invokes you when checks finish, so you idle without burning token
           || (git checkout -b <base> && git push -u origin <base>)
    else (local + remote both present) → git checkout <base> && git pull --ff-only
 1. feature_id ← pipeline.yml.
-   git log --oneline <base> | grep -E "\(autopilot:<feature_id>\): phase .* gate PASSED"
-     → highest MERGED phase P → target N = P+1.   N past the last phase → STEP E (optimization PR).
+   Done-set = git log --oneline <base> | grep -E "\(autopilot:<feature_id>\): phase .* gate PASSED".
+   Target N = lowest-id READY phase (no PASSED marker ∧ all depends_on in the done-set) — the
+   dependency-aware ready-set from SKILL.md "Every firing" step 1. Empty deps ⇒ N = P+1 (linear).
+   Ready-set empty AND all phases merged → STEP E (optimization PR); empty with phases left = dep
+   cycle/unsatisfiable → stop and report, never spin.
    Phase branches are feature-scoped: `autopilot/<feature_id>/phase-N` (two features in one repo must
    not collide on `autopilot/phase-0`).
 2. RESUME (ordered — covers every interruption window before merge):

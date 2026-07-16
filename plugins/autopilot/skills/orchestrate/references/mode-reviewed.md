@@ -14,9 +14,11 @@ enough for pr_ci.
 
 ```
 1. STATE   feature_id ← pipeline.yml.
-           git log --oneline | grep -E "\(autopilot:<feature_id>\): phase .* gate PASSED"
-             → highest done phase P → target N = P+1.
-           If N past the last phase in pipeline.yml → OPTIMIZATION PASS (below), then end the loop.
+           Done-set = git log --oneline | grep -E "\(autopilot:<feature_id>\): phase .* gate PASSED".
+           Target N = lowest-id READY phase (no PASSED marker ∧ all depends_on in done-set) — the
+             dependency-aware ready-set from SKILL.md "Every firing" step 1. Empty deps ⇒ N = P+1.
+           Ready-set empty AND all phases done → OPTIMIZATION PASS (below), then end the loop;
+             empty with phases left = dep cycle/unsatisfiable → stop and report, never spin.
 2. RESUME  grep the repo for phase N's deliverables → exists-vs-required list.
            Only missing/incomplete work is in scope (a half-done phase continues, never restarts).
 3. RUN     Invoke the `run-phase` skill for phase N. Obey its gate verbatim.

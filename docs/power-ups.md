@@ -95,6 +95,26 @@ fool:
   there. autopilot detects `aqe` automatically — on your PATH, or by the footprint `aqe init` leaves
   behind. More in the [agentic-qe repo](https://github.com/proffesor-for-testing/agentic-qe).
 
+### 🕸️ beads (`bd`) — a picture of the work graph
+
+[beads](https://github.com/steveyegge/beads) is a dependency-aware issue tracker. For a big, multi-track
+feature — a system of several bounded contexts with cross-dependencies — a flat list of phases hides the
+real shape of the work. beads makes it a **graph** you can see and query: which units are done, which are
+**ready** right now (`bd ready`), and what's still blocked on what (`bd dep tree`).
+
+Two things to know, because they keep autopilot honest:
+
+- **It's a picture, never the boss.** Your git history and `pipeline.yml` stay the single source of
+  truth for what's done and what's next; autopilot only ever _copies status into_ beads, never reads it
+  back to make decisions. Delete beads and nothing about the run changes.
+- **You don't need it to get dependency-aware ordering.** autopilot already sequences phases by the
+  `depends_on:` links in your `pipeline.yml` — a later phase can run ahead of an earlier one that's still
+  blocked. beads just gives that graph a queryable, visual form.
+
+- **Install:** follow the [beads project](https://github.com/steveyegge/beads)'s own instructions to get
+  the `bd` command, then `bd init` in your project. autopilot detects `bd` on your PATH, or a `.beads/`
+  folder in the repo — no configuration.
+
 ---
 
 ## How they stack — each degrades gracefully
@@ -102,6 +122,7 @@ fool:
 | Step                  | Vanilla floor (always works)                     | + planning power-ups                                                    | + execution power-ups                                        |
 | --------------------- | ------------------------------------------------ | ----------------------------------------------------------------------- | ------------------------------------------------------------ |
 | **Plan a weak spec**  | Brainstorm + inline rubric sharpen the spec      | `clarity` + `deep-research` give cited, numbered, testable requirements | —                                                            |
+| **Sequence the work** | Dependency-aware ready-set from `depends_on`     | —                                                                       | `beads` makes the graph queryable/visual (`bd ready`)        |
 | **Implement a phase** | One focused agent at a time                      | —                                                                       | `ruflo` runs a parallel agent team + recalls past phases     |
 | **Gate a phase**      | Reviewer pass + `/code-review` + native coverage | —                                                                       | `aqe` adds mutation/coverage; pentest + chaos on risk phases |
 

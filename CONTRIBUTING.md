@@ -60,6 +60,8 @@ pnpm run link-check   # verify markdown links resolve (needs network)
 `pnpm run validate` runs the manifest checker on its own (plain Node, no install needed). It
 enforces: valid JSON manifests, agreeing versions, every README-referenced command exists,
 and every skill directory has a `SKILL.md` whose frontmatter `name` matches the directory.
+`pnpm run proof` runs `scripts/verify-ready-set.mjs`, an executable proof of the dependency-aware
+ready-set (ADR-0001); both run inside `pnpm run check`.
 
 CI runs the same checks on every pull request — `validate`, `check`, a security `audit`, and a
 markdown link check.

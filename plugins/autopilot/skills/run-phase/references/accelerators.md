@@ -1,12 +1,13 @@
-# Driving ruflo & agentic-qe (when present)
+# Driving ruflo, agentic-qe & beads (when present)
 
-Read this when `profile.accelerators.ruflo.available` or `agentic_qe.available` is true. These tools
-are _force multipliers_, never prerequisites — the baseline (focused subagents + `/code-review` +
-native coverage) is fully supported. The point of detecting them is to **actively drive** them at the
-right step, not merely note they exist.
+Read this when `profile.accelerators.ruflo.available`, `agentic_qe.available`, or `beads.available` is
+true. These tools are _force multipliers_, never prerequisites — the baseline (focused subagents +
+`/code-review` + native coverage, and a git-native dependency-aware ready-set) is fully supported. The
+point of detecting them is to **actively drive** them at the right step, not merely note they exist.
 
-Detection (done by `autopilot:detect`): `ruflo` / `aqe` on PATH = global; a project `.ruflo/` or an
-`aqe init` footprint in the repo = project scope. Either scope counts as available.
+Detection (done by `autopilot:detect`): `ruflo` / `aqe` / `bd` on PATH = global; a project `.ruflo/`,
+an `aqe init` footprint, or a `.beads/` dir in the repo = project scope. Either scope counts as
+available.
 
 ## ruflo — comprehension recall, swarms, cross-session memory
 
@@ -16,7 +17,7 @@ Detection (done by `autopilot:detect`): `ruflo` / `aqe` on PATH = global; a proj
 | Step 1.5               | Stand up the swarm topology                                                      | `ruflo swarm init --v3-mode` (hierarchical-mesh, hybrid memory + HNSW)                                                                                                |
 | Step 1.5               | Pick the agent for a sub-task                                                    | `ruflo route "<task description>"`                                                                                                                                    |
 | Step 2–3               | Spawn specialists for parallel work, peer-to-peer SendMessage, run_in_background | researcher → architect → coder(s) → tester → reviewer; right-size to the phase. Agents return COMPACT results (decisions + file paths + test names), never file dumps |
-| Step 6 (PASS)          | Persist the durable summary for future-phase recall                              | `ruflo memory store -k autopilot-phase-<N> --value "<≤12-line summary>" -n autopilot`                                                                                 |
+| Step 6 (PASS)          | Persist the durable summary for future-phase recall                              | `ruflo memory store -k autopilot-<feature_id>-<unit_id> --value "<≤12-line summary>" -n autopilot` (unit_id = phase id, or bead id when beads present)                |
 | Optimization pass      | Find refactor seams across phases                                                | `ruflo analyze boundaries <src dir>`                                                                                                                                  |
 
 The swarm reads the SAME comprehension slice (the phase's ADRs/DDD/PRD): the researcher ingests it and
@@ -43,9 +44,25 @@ Persist QE signals to durable memory so they feed future phases and any strategy
 `memory_store({ namespace:"autopilot-qe", persist:true, key:"phase-<N>-signals",
   value:"<coverage % · mutation score · exploits-found · flaky tests · chaos verdicts>" })`.
 
-## Both absent
+## beads (bd) — the work-graph projection
+
+beads is a **projection**, never the source of truth: git markers + `pipeline.yml depends_on` stay
+authoritative, and everything must remain reconstructable with beads absent. Drive it read-only during a
+phase, and sync **one way** on PASS.
+
+| Step              | What to drive                                                       | Command(s)                                        |
+| ----------------- | ------------------------------------------------------------------- | ------------------------------------------------- |
+| Step 1.5 (orient) | See this unit's graph context (deps, siblings, acceptance)          | `bd show <unit>` ; `bd ready` (cross-check only)  |
+| Step 6 (PASS)     | Sync bead status **from** the git marker — one way, markers → beads | `bd close <unit>` / `bd update <unit> --status …` |
+
+Never read bead status back to decide what's done or what's next — the git marker is the authority
+(`orchestrate` computes the ready-set from markers + `depends_on`, not from `bd`). The plan-time graph
+sync (epic per track, issue per phase, `blocks` per `depends_on`) lives in `plan` step 9.
+
+## All absent
 
 Do the work directly: a couple of focused subagents for parallel implementation/testing, the Tier-3
 reviewer subagent + `/code-review` for adversarial review, and the language's native coverage tool for
-Tier 2. The gate's pass/fail meaning is identical — accelerators change _how thoroughly and how fast_
-you reach the verdict, never _whether a red gate can advance_.
+Tier 2. The dependency-aware ready-set still works — it's computed from `pipeline.yml depends_on` + git
+markers with no tool. The gate's pass/fail meaning is identical — accelerators change _how thoroughly
+and how fast_ you reach the verdict, never _whether a red gate can advance_.
