@@ -17,7 +17,7 @@ present) mirrors each item as a `discovered-from` edge — a projection, never c
   "id": "blk-3a2f",                 // short stable handle (feature-unique); how status/plan reference it
   "kind": "blocker" | "parking-lot",
   "origin": { "feature_id": "<slug>", "phase": 3, "at": "<git HEAD commit time>" },
-  "discovered_by": "gate" | "run-phase" | "reviewer" | "user",
+  "discovered_by": "gate" | "run-phase" | "reviewer" | "court" | "user",
   "note": "phase 3 needs a migration helper that doesn't exist",
   "blocks": 3,                      // ONLY for kind:blocker — the phase id it holds up
   "status": "open"                  // then append transitions (below), never mutate in place
@@ -37,7 +37,9 @@ An item's **current status is its latest line**. This keeps the log replayable, 
 
 - **blocker** — record this **only** when the current phase _cannot make its DoD green_ without a
   prerequisite that doesn't yet exist. Concrete test: you cannot reach a green gate because something the
-  phase depends on is missing. Set `blocks` to this phase's id.
+  phase depends on is missing. Set `blocks` to this phase's id. A qe-court **BLOCK** verdict is the one
+  other source: a fatal charge survived the kill and overturn rounds — record it with
+  `discovered_by: "court"` and the fatal charge as the `note` (see references/gate.md, "The court").
 - **parking-lot** — anything merely _noticed_ (a latent bug, an unrelated N+1, a missing test elsewhere).
   It never blocks and never enters the active graph.
 

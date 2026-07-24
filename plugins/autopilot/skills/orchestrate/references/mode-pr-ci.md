@@ -123,13 +123,27 @@ A = count of `fix(autopilot:<feature_id>): ci attempt` commits on this branch
    (base = <base>): refactor seams (ruflo analyze boundaries if available), /simplify, /code-review;
    squash-merge into <base> with subject
    "chore(autopilot:<feature_id>): cross-phase optimization — gate PASSED".
-2. FINAL HANDOFF — do NOT merge <trunk>. Open the integration PR:
+2. THE INTEGRATION COURT (only if accelerators.qe_court.available AND pipeline.court ≠ off) —
+   convene qe-court on the FULL integration diff (base vs trunk) per run-phase references/gate.md
+   "The court": this is the court's release-go/no-go seat, and the human who merges <trunk> is its
+   final judge. Commit the court record to .autopilot/court/<feature_id>/integration.md on <base>,
+   append the "type":"court" ledger line (phase: "integration"). Verdict handling at THIS seat:
+     SHIP   → proceed to the handoff; attach the record.
+     REMAND → fix the surviving charges on <base> (bounded by fix_budget), re-convene ONCE; a second
+              REMAND proceeds to the handoff with the charges attached — the human judge rules.
+     BLOCK  → proceed to the handoff, but title the PR "[BLOCKED by qe-court] …" and put the fatal
+              charge at the top of the body. Never auto-close, never suppress the PR.
+   The verdict NEVER merges or blocks the merge mechanically — <trunk> stays human-gated either way;
+   the court only changes what evidence the human sees. Skipped (absent/single-vendor/off) → say so
+   in the PR body's accelerator line, never silently.
+3. FINAL HANDOFF — do NOT merge <trunk>. Open the integration PR:
    gh pr create --base <trunk> --head <base>
      --title "feat(autopilot): <feature> — full feature (all phases)"
-     --body  "<per-phase summary table · all gate markers · accelerator signals · 'Ready for human
+     --body  "<per-phase summary table · all gate markers · accelerator signals · the qe-court record
+              (verdict + strongest case FOR and AGAINST) when the court convened · 'Ready for human
               review; do NOT auto-merge'>"
    Report the integration PR URL and END THE LOOP. The human decides whether to merge into <trunk>.
-3. NEXT LINEAGE — if any queued plans exist (ls .autopilot/queued/*.pipeline.yml), do NOT auto-start
+4. NEXT LINEAGE — if any queued plans exist (ls .autopilot/queued/*.pipeline.yml), do NOT auto-start
    them. Tell the user this pipeline is done and the next one is parked, and give the exact promote
    command from docs/lifecycle.md (mv queued → active, seed ledger record 0, commit), then
    `/autopilot-run`. Promotion is a deliberate, human-initiated step — each feature is its own lineage.

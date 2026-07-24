@@ -67,12 +67,51 @@ radius is real (merge logic, anything that executes model-driven edits, auth/sec
 If `risk_phases` includes the phase but the accelerator is absent, note "heavy passes unavailable —
 relying on Tier 3" and continue. Absence of an optional tool never fails the gate.
 
+## The court — qe-court verdict on risk phases (gated, supersedes parts of Tier 4)
+
+Convene when **all** hold: `accelerators.qe_court.available` is true, `pipeline.court` is not `off`,
+and the phase qualifies (`court: auto` → phase id ∈ `risk_phases`; `court: all` → every phase).
+qe-court (agentic-qe ≥ 3.13, its ADR-124) is an _orchestration skill_ — you convene it by following
+its own protocol, never by reimplementing critics:
+
+1. Read the court's `config.json` (under the aqe install's `.claude/skills/qe-court/`) for the
+   prosecutor panel, per-role `routing`, and `overturnDepth`.
+2. Spawn the prosecutors **in one message, in parallel, blind** (each files charges against the
+   phase diff with its own probe set). Keep `security-scanner` and `mutation` seated — the court's
+   own config warns that omitting them is how a false SHIP happens.
+3. Kill round → jury (cross-vendor, writer ≠ juror) → three-valued verdict; if SHIP, the overturn
+   round runs to `overturnDepth`.
+4. Write the court record markdown to `.autopilot/court/<feature_id>/phase-<N>.md` — committed with
+   the phase (same atomicity rule as the ledger), so the evidence is durable.
+
+Map the verdict onto the gate's existing outcomes — the court invents **no new stop reason**:
+
+| court verdict | gate meaning                                                                                                                 |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| **SHIP**      | court check green — counts like any other applicable check.                                                                  |
+| **REMAND**    | gate **FAIL** — report the surviving charges verbatim as the fix list; the normal fix loop applies.                          |
+| **BLOCK**     | gate **BLOCKED** — record a blocker (`discovered_by: "court"`, note = the fatal charge), ledger `"verdict":"BLOCKED"`, STOP. |
+
+When the court convenes, it **subsumes** Tier 4's standalone mutation and pentest passes (its seated
+prosecutors run them — running both would double-spend); Tier-4 passes with no prosecutor equivalent
+(chaos) still run standalone. Tier 3 remains the unconditional floor on every phase — the court sits
+above it, never replaces it. Degrade honestly: accelerator absent → Tier 4 exactly as above; skill
+present but only one vendor reachable → report `court: skipped (single vendor — the panel needs ≥2)`,
+never a silent pass. Cost note: the court's default routing may include metered tiers; aqe's provider
+layer (its ADR-123) applies budget caps and receipts to every call.
+
 ## Verdict logic
 
 ```
-applicable = Tier1 + Tier2 + Tier3 + (Tier4 if phase in risk_phases and agentic_qe available)
-PASS  ⇔ every applicable, non-skipped check is green
-FAIL  ⇔ any applicable check is red
+court_on   = qe_court available and pipeline.court ≠ off
+            and (phase in risk_phases or pipeline.court == all)
+applicable = Tier1 + Tier2 + Tier3
+           + (court if court_on)
+           + (Tier4 if phase in risk_phases and agentic_qe available;
+              minus mutation/pentest when the court convened — its prosecutors ran them)
+PASS  ⇔ every applicable, non-skipped check is green   (court: SHIP)
+FAIL  ⇔ any applicable check is red                    (court: REMAND — charges are the fix list)
+BLOCKED ⇐ the court returned BLOCK (a fatal charge survived — see references/discovered.md)
 ```
 
 On PASS: commit the feature-scoped marker, persist the summary, append the ledger line, STOP.
@@ -128,6 +167,25 @@ Firing records, one JSON object per line, schema:
 - `at` — ISO-8601 from the commit you just made (`git log -1 --format=%cI`); on FAIL, the current HEAD
   commit time. Never invent a clock value — read it from git so it stays deterministic and replayable.
 - `summary` — ≤200 chars; mirrors the ≤12-line summary you persist.
+
+When the court convened, append **one additional** `"type":"court"` line right after the firing record
+(field names mirror qe-court's own `schemas/output.json`):
+
+```json
+{
+  "type": "court",
+  "phase": 2,
+  "verdict": "SHIP",
+  "charges_surviving": 0,
+  "overturn_rounds": 2,
+  "vendors": 2,
+  "record": ".autopilot/court/<feature_id>/phase-2.md",
+  "at": "2026-06-26T14:07:00-07:00"
+}
+```
+
+`verdict` is `"SHIP"`, `"REMAND"`, or `"BLOCK"`; `record` points at the committed court-record
+markdown. For the integration-PR court (orchestrate STEP E), `phase` is the string `"integration"`.
 
 Append, don't rewrite — the file is append-only history. On PASS, stage the new ledger line **in the
 same commit as the marker** so they're atomic. On FAIL (no marker commit), commit the ledger line alone

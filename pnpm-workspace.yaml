@@ -1,0 +1,2 @@
+overrides:
+  js-yaml: ">=5.2.2"

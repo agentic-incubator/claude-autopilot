@@ -82,6 +82,15 @@ accelerators:
   #   Also exposes requirements_validate / qe_requirements_quality-criteria — used by `plan` step 1.5
   #   to score spec readiness when present.
   agentic_qe:   { available: false, scope: "" }
+  # qe-court (aqe ≥ 3.13, ADR-124) → an adversarial review COURT: blind parallel prosecutors from
+  #   ≥2 distinct LLM vendors, a kill round, a cross-vendor jury, and an overturn round, yielding a
+  #   three-valued verdict (SHIP / REMAND / BLOCK) that maps onto the gate's PASS / FAIL / BLOCKED.
+  #   Convened on risk_phases (it then orchestrates the mutation/pentest passes as seated
+  #   prosecutors) and on the base→trunk integration PR (the human judge's evidence). `vendors`
+  #   records how many distinct LLM vendors detect could reach — the court's own anti-collusion
+  #   invariant needs ≥2, so available is false below that even when the skill is installed.
+  #   See docs/adr/0004-qe-court-adversarial-verdict.md.
+  qe_court:     { available: false, scope: "", vendors: 0 }   # scope: "skill" | "project" | ""
   # beads (bd) → a PROJECTION of the phase work graph, never the source of truth (git markers +
   #   pipeline.yml stay authoritative; sync is one-way markers→beads). When available, `plan` mirrors
   #   the graph as epics(track)/issues(phase)/tasks(DoD) with blocks edges, and orchestrate can

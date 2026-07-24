@@ -35,6 +35,16 @@ Tick every box. An unticked DoD line = gate FAILED.
 - [ ] chaos:     agentic-qe chaos engineer on fault paths → must degrade to a clean handoff.
 If the accelerator is absent, SKIP and note it — do not fail. Tier 3 is the floor everywhere.
 
+## The court (ONLY if accelerators.qe_court.available AND pipeline.court permits this phase)
+- [ ] Convene qe-court per its own protocol (config.json panel/routing/overturnDepth): blind parallel
+      prosecutors (keep security-scanner + mutation seated — they subsume Tier 4's mutation/security
+      boxes above), kill round, cross-vendor jury, overturn round if SHIP.
+- [ ] Commit the court record to `.autopilot/court/{{pipeline.feature_id}}/phase-{{phase.id}}.md`
+      and append the `"type":"court"` ledger line.
+Verdict mapping: SHIP → this box is green · REMAND → gate FAILED (surviving charges = the fix list) ·
+BLOCK → gate BLOCKED (blocker with discovered_by:"court"). Single vendor reachable → SKIP with
+`skipped (single vendor — the panel needs ≥2)`; absent accelerator → SKIP. Never fail on absence.
+
 ## Verdict
 - ALL applicable boxes green  → gate PASSED. Commit the feature-scoped marker
   `(autopilot:{{pipeline.feature_id}}): phase {{phase.id}} complete — gate PASSED`; persist the phase

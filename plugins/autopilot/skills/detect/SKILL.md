@@ -71,6 +71,21 @@ Also detect:
     Set `accelerators.<tool>.available` with `scope: "skill"`. When present, `plan` uses them to score
     spec readiness and enrich a thin spec; absence degrades to inline brainstorm/rubric. Never a gate
     failure.
+  - **qe-court** (aqe ≥ 3.13, ADR-124) — the adversarial review court, a _conditional_ accelerator
+    with two prerequisites beyond the skill itself: `qe_court.available` is true only when **all
+    three** hold:
+    1. `agentic_qe.available` (the court composes aqe's prosecutor agents);
+    2. the court skill footprint exists — `.claude/skills/qe-court/` under the aqe install (probe
+       below) or in the project's skill registry / skills-manifest;
+    3. **`vendors ≥ 2`** — count the distinct LLM vendors reachable right now: Claude (always 1, you
+       are running on it), plus codex CLI on PATH, plus any metered key in the env
+       (`OPENAI_API_KEY` / `GEMINI_API_KEY` / `OPENROUTER_API_KEY`) or a cognitum provider. Record
+       the count in `accelerators.qe_court.vendors` either way.
+
+    Below 2 vendors, record `available: false` with the honest `vendors` count — a single-vendor
+    "court" would violate its own anti-collusion invariant (writer ≠ juror across vendors), so
+    autopilot degrades to the Tier-3/Tier-4 floor rather than convening a sham panel.
+
   - Always check `/code-review` (the Tier-3 floor, assumed present).
 - **Conventions** — skim a few representative source files and summarize the house style (layering,
   naming, where tests live) into `conventions:` so new code matches.
@@ -94,6 +109,14 @@ command -v ruflo aqe bd 2>/dev/null                       # global scope (bd = b
 ls -d .ruflo .agentic-qe .beads .claude 2>/dev/null       # project scope
 ruflo --version 2>/dev/null; aqe --version 2>/dev/null; bd version 2>/dev/null
 
+# qe-court — the skill footprint under the aqe install, plus the vendor-diversity probe (needs ≥2).
+# Two probe styles because installs differ: npm-global root, and bin-symlink walk (mise/volta/etc.).
+ls -d "$(npm root -g)/agentic-qe/.claude/skills/qe-court" 2>/dev/null \
+  || ls -d "$(dirname "$(readlink -f "$(command -v aqe)")")/../../.claude/skills/qe-court" 2>/dev/null
+ls -d .claude/skills/qe-court 2>/dev/null                 # project-scoped copy, if any
+command -v codex 2>/dev/null                              # second vendor via ChatGPT subscription
+env | grep -oE 'OPENAI_API_KEY|GEMINI_API_KEY|OPENROUTER_API_KEY' | sort -u   # metered second vendors
+
 # Planning accelerators are SKILLS, not on PATH — judge availability from your own active skill set
 # (can you invoke `superpowers:brainstorming`, `clarity`, `deep-research`?). Optional footprint check:
 ls -d ~/.claude/plugins 2>/dev/null && ls ~/.claude/plugins 2>/dev/null | grep -Ei 'superpower|clarity|deep-research'
@@ -111,7 +134,10 @@ Map results into `profile.yml`: a found `make test` target → `commands.test: "
 PATH → `accelerators.ruflo: { available: true, scope: "global" }`; a `.ruflo/` dir → `scope: "project"`;
 `bd` on PATH → `accelerators.beads: { available: true, scope: "global" }`; a `.beads/` dir →
 `scope: "project"`; a `clarity` skill you can invoke → `accelerators.clarity: { available: true, scope: "skill" }`
-(same for `superpowers`/`deep_research`); found ADR/DDD dirs → `pipeline.references.adr_dir/ddd_dir`. So yes:
+(same for `superpowers`/`deep_research`); aqe available + a qe-court footprint + 2 reachable vendors →
+`accelerators.qe_court: { available: true, scope: "skill", vendors: 2 }` (a project-local
+`.claude/skills/qe-court/` → `scope: "project"`; fewer than 2 vendors → `available: false` with the
+real count); found ADR/DDD dirs → `pipeline.references.adr_dir/ddd_dir`. So yes:
 **`autopilot:detect` (or
 `/autopilot-detect`, or `/autopilot-init` which also plans) is the single skill/command that discovers
 all of this and crafts both `.autopilot/` files for you** — you only confirm.
