@@ -89,6 +89,15 @@ fool:
 - **Coverage analysis** — finds the parts of your code no test touches.
 - **Security and resilience passes** — applied to your riskier phases.
 - **Requirements validation** — also used during planning to _score_ how testable your spec is.
+- **qe-court** (aqe ≥ 3.13) — an _adversarial review court_ for your riskiest phases and the final
+  integration PR. Independent AI reviewers **from at least two different vendors** attack the change
+  with their own probe sets, weak findings are killed off, a cross-vendor jury rules
+  **SHIP / REMAND / BLOCK**, and any SHIP must survive an escalating deeper review before it stands.
+  This closes autopilot's one structural blind spot — the model that wrote the code never gets to be
+  the only one judging it. Needs a second vendor reachable (the `codex` CLI, or an OpenAI / Gemini /
+  OpenRouter key); with only one vendor autopilot honestly skips it rather than fake a jury. Control
+  it with `court: auto | off | all` in `pipeline.yml`
+  ([ADR-0004](../plugins/autopilot/docs/adr/0004-qe-court-adversarial-verdict.md)).
 
 - **Install:** another command-line tool, so [Node.js](https://nodejs.org) first. Install it once with
   `npm install -g agentic-qe`, then run `aqe init` inside the repo you're working in to switch it on

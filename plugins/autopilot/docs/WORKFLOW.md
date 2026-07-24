@@ -55,10 +55,14 @@ flowchart TD
     T2 --> T3["Tier 3 — Adversarial review (every phase, the floor)<br/>reviewer subagent + /code-review"]
     T3 --> RISK{phase ∈ risk_phases<br/>AND aqe available?}
     RISK -->|no| V
-    RISK -->|yes| T4["Tier 4 — Heavy passes (aqe fleet)<br/>mutation · pentest 'No Exploit No Report' · chaos"]
-    T4 --> V{quality_assess<br/>go / no-go}
+    RISK -->|yes| COURT{qe_court available<br/>AND court ≠ off?}
+    COURT -->|yes| CT["The court — qe-court (ADR-0004)<br/>blind cross-vendor prosecutors (subsume mutation/pentest) ·<br/>kill round · jury · overturn — SHIP / REMAND / BLOCK<br/>+ chaos standalone"]
+    COURT -->|no| T4["Tier 4 — Heavy passes (aqe fleet)<br/>mutation · pentest 'No Exploit No Report' · chaos"]
+    CT --> V{quality_assess<br/>go / no-go}
+    T4 --> V
     V -->|green| PASS([gate PASSED])
     V -->|red| FAIL([gate FAILED → STOP])
+    CT -.->|BLOCK| BLK([gate BLOCKED → blocker record → STOP])
 ```
 
 ## Comprehension: who reads what (the memory contract)
@@ -99,14 +103,14 @@ audit or replay a run, read `.autopilot/runs/<feature_id>.jsonl`; `/autopilot-st
 
 ## Effort summary
 
-| Stage                 | Without accelerators (baseline)                    | With ruflo                            | With aqe                                            |
-| --------------------- | -------------------------------------------------- | ------------------------------------- | --------------------------------------------------- |
-| Plan                  | read corpus, score readiness, decompose, write DoD | + memory recall of prior decisions    | + `requirements_validate` scores/makes DoD testable |
-| Detect                | probe stack/corpus, confirm                        | (records ruflo scope)                 | (records aqe scope)                                 |
-| Implement             | TDD with focused subagents                         | hierarchical-mesh swarm, peer-to-peer | seed RED with `qe-test-architect`                   |
-| Gate T1–T3            | commands + reviewer subagent + /code-review        | swarm reviewer                        | coverage_analyze_sublinear                          |
-| Gate T4 (risk_phases) | — (relies on T3 floor)                             | —                                     | mutation · pentest · chaos                          |
-| Advance               | git marker (+ optional PR/CI)                      | persist summary to memory             | persist QE signals to memory                        |
+| Stage                 | Without accelerators (baseline)                    | With ruflo                            | With aqe                                                                                                                |
+| --------------------- | -------------------------------------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Plan                  | read corpus, score readiness, decompose, write DoD | + memory recall of prior decisions    | + `requirements_validate` scores/makes DoD testable                                                                     |
+| Detect                | probe stack/corpus, confirm                        | (records ruflo scope)                 | (records aqe scope)                                                                                                     |
+| Implement             | TDD with focused subagents                         | hierarchical-mesh swarm, peer-to-peer | seed RED with `qe-test-architect`                                                                                       |
+| Gate T1–T3            | commands + reviewer subagent + /code-review        | swarm reviewer                        | coverage_analyze_sublinear                                                                                              |
+| Gate T4 (risk_phases) | — (relies on T3 floor)                             | —                                     | mutation · pentest · chaos; with qe_court (≥2 vendors): the court subsumes mutation/pentest and rules SHIP/REMAND/BLOCK |
+| Advance               | git marker (+ optional PR/CI)                      | persist summary to memory             | persist QE signals to memory                                                                                            |
 
 **Planning skills (Plan stage only).** When the spec scores thin, `plan` step 2 enriches on a degrade
 ladder before decomposing: **best** — `deep-research` produces a **cited** brief (saved to

@@ -1,7 +1,7 @@
 # Driving ruflo, agentic-qe & beads (when present)
 
-Read this when `profile.accelerators.ruflo.available`, `agentic_qe.available`, or `beads.available` is
-true. These tools are _force multipliers_, never prerequisites — the baseline (focused subagents +
+Read this when `profile.accelerators.ruflo.available`, `agentic_qe.available`, `qe_court.available`,
+or `beads.available` is true. These tools are _force multipliers_, never prerequisites — the baseline (focused subagents +
 `/code-review` + native coverage, and a git-native dependency-aware ready-set) is fully supported. The
 point of detecting them is to **actively drive** them at the right step, not merely note they exist.
 
@@ -43,6 +43,25 @@ phase, expensive adversarial passes only on `risk_phases`:
 Persist QE signals to durable memory so they feed future phases and any strategy-learning pass:
 `memory_store({ namespace:"autopilot-qe", persist:true, key:"phase-<N>-signals",
   value:"<coverage % · mutation score · exploits-found · flaky tests · chaos verdicts>" })`.
+
+### qe-court — the adversarial verdict (when `qe_court.available`)
+
+The court is the answer to autopilot's deepest structural risk: the same model that wrote the phase
+also reviews it. qe-court convenes blind, parallel prosecutors from **≥ 2 distinct vendors**, kills
+weak charges, has a cross-vendor jury rule **SHIP / REMAND / BLOCK**, and makes any SHIP survive an
+overturn round. Drive it at exactly two seats — the full protocol and verdict mapping live in
+`references/gate.md` ("The court"):
+
+| Seat                                | When                                                               | What to do                                                                                                                    |
+| ----------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| Risk-phase gate (Step 5)            | `pipeline.court: auto` + phase ∈ risk_phases (`all` = every phase) | Convene per the skill's config.json; it subsumes Tier 4's mutation/pentest (its prosecutors run them); chaos still standalone |
+| Integration PR (orchestrate STEP E) | before the base→trunk PR                                           | Convene on the full integration diff; the court record rides in the PR body — the human judge's evidence                      |
+
+Degrade ladder (state it, never silently): accelerator absent → Tier 3 floor + Tier 4 as configured;
+skill present but `vendors < 2` → `court: skipped (single vendor — the panel needs ≥2)`; `pipeline.court:
+off` → `court: skipped (off by pipeline)`. Cost: the court's default routing can include metered tiers —
+aqe's provider layer applies budget caps and receipts (its ADR-123) to every call, and `pipeline.court:
+off` is the hard stop if spend must be zero.
 
 ## beads (bd) — the work-graph projection
 
