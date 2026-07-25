@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.12.0](https://github.com/agentic-incubator/claude-autopilot/compare/v0.11.0...v0.12.0) (2026-07-25)
+
+
+### Features
+
+* qe-court adversarial verdict — cross-vendor jury on risk phases and the integration PR ([#26](https://github.com/agentic-incubator/claude-autopilot/issues/26)) ([886726c](https://github.com/agentic-incubator/claude-autopilot/commit/886726c439292c860128974b3a70acef6a92a0dd))
+
+
+### Bug Fixes
+
+* correct stale and false claims across docs, templates, and skills ([#28](https://github.com/agentic-incubator/claude-autopilot/issues/28)) ([6ece5e5](https://github.com/agentic-incubator/claude-autopilot/commit/6ece5e5e2d377721d3a52ffe6fa2f0578bc646cf))
+
 ## [0.11.0](https://github.com/agentic-incubator/claude-autopilot/compare/v0.10.0...v0.11.0) (2026-07-16)
 
 
