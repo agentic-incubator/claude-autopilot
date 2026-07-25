@@ -76,13 +76,13 @@ sharpen the acceptance criteria now, not mid-run.
    Enrich on a degrade ladder — best tool available, never blocking:
    - **Best — dedicated skills.** When `deep-research` is available (`profile.accelerators.deep_research`),
      drive it scoped to the _specific gaps_ the score flagged, and write its **cited** brief to
-     `.autopilot/research/<feature-id>.md` (durable git state — future phases read it as part of the
+     `.autopilot/research/<feature_id>.md` (durable git state — future phases read it as part of the
      corpus). When `clarity` is available, turn the brief + corpus into numbered, testable requirements
      that become DoD lines.
    - **Middle — ruflo.** When those skills are absent but `profile.accelerators.ruflo` is set, ruflo has
      no clarity/deep-research equivalent, but its `researcher` + SPARC `specification` agents and
      `hive-mind` consensus beat a cold inline pass: research the flagged gaps and draft numbered
-     requirements, writing the result to `.autopilot/research/<feature-id>.md`. ruflo lacks citation and
+     requirements, writing the result to `.autopilot/research/<feature_id>.md`. ruflo lacks citation and
      verification discipline, so label every claim **unverified** for the confirm step.
    - **Floor — inline.** With no research tooling, reason through the gaps yourself against the same
      rubric (and use `superpowers:brainstorming`, if present, to force the open decisions — see step 3).
@@ -104,6 +104,10 @@ sharpen the acceptance criteria now, not mid-run.
      ⇒ plain linear order, exactly as before). Keep it a DAG — no cycles (orchestrate stops on one).
    - **Tag each phase's `track:`** with its bounded context for multi-track features (it groups the plan
      and, when beads is present, becomes the epic). Single-track plans leave it empty.
+   - **Populate `touches:`** with the path globs each phase is expected to modify when the feature is
+     multi-track or may run with `max_parallel > 1`. The parallel dispatcher only co-dispatches phases
+     whose `touches` are disjoint — an empty/unknown `touches` is treated as NOT disjoint, so omitting
+     them silently serializes an otherwise parallel plan. Irrelevant when everything runs serially.
    - **Let ruflo build the first draft when available.** If `accelerators.ruflo` is set, drive its
      `planner` / `task-orchestrator` to propose the decomposition, dependency edges, critical path, and
      per-unit risk (its ReasoningBank recall from step 1 sharpens estimates/risk). You then _curate_ that

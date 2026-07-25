@@ -48,7 +48,7 @@ Also detect:
     self-certification this whole design forbids.
   - **none** — no workflows at all.
 
-  Record the verdict and the required check names (if discoverable) under `ci:`. Only **covered** is safe
+  Record the verdict under `ci:`. Only **covered** is safe
   for `pr_ci`; **trunk-only** and **none** trigger the remediation step below.
 
 - **Design corpus** — discover where the authoritative docs live and record them in `references:`

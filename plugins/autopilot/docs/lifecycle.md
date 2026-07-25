@@ -22,8 +22,13 @@ plan survives in git history and as its own ledger's record 0.
 | Location                              | Tracked?    | Role                                                     |
 | ------------------------------------- | ----------- | -------------------------------------------------------- |
 | `.autopilot/pipeline.yml`             | committed   | the single **active** plan                               |
+| `.autopilot/profile.yml`              | committed   | the shared stack profile                                 |
 | `.autopilot/queued/<id>.pipeline.yml` | git-ignored | **parked** plans, local until promoted                   |
 | `.autopilot/runs/<id>.jsonl`          | committed   | per-feature ledger; record 0 is the `type:plan` snapshot |
+| `.autopilot/discovered/<id>.jsonl`    | committed   | blockers + parking-lot items (append-only, provenance)   |
+| `.autopilot/court/<id>/phase-N.md`    | committed   | qe-court verdict records, when that accelerator runs     |
+| `.autopilot/research/<id>.md`         | committed   | cited research brief from plan-time spec enrichment      |
+| `.autopilot/worktrees/`               | git-ignored | scratch clones for parallel slots (`max_parallel > 1`)   |
 
 `.autopilot/queued/` is git-ignored on purpose: a follow-up you scoped today shouldn't enter the repo's
 history (or another machine's checkout) until you deliberately promote it. `autopilot:plan` adds the
@@ -148,7 +153,6 @@ TRUNK=<trunk>; BASE=<base>
 if ! git ls-remote --exit-code --heads origin "$BASE" >/dev/null 2>&1; then
   # base is gone on the remote (deleted after the integration merge).
   git stash push -u -m "autopilot-base-recreate"   # -u carries untracked .autopilot/queued/* along
-  STASHED=$?                                        # (git stash exits non-zero / prints "No local changes" if clean)
   git checkout "$TRUNK" && git pull --ff-only
   git branch -f "$BASE" "$TRUNK"                    # recreate base at the refreshed trunk
   git checkout "$BASE"
@@ -190,5 +194,5 @@ backlog; promote one to a queued pipeline whenever you choose, exactly like any 
 ## See also
 
 - [`WORKFLOW.md`](WORKFLOW.md) — the end-to-end flow and where accelerators plug in.
-- `skills/plan/SKILL.md` — how plan decides active-vs-queued and seeds the ledger.
-- `skills/orchestrate/references/mode-pr-ci.md` — STEP A's base-branch handling at runtime.
+- `../skills/plan/SKILL.md` — how plan decides active-vs-queued and seeds the ledger.
+- `../skills/orchestrate/references/mode-pr-ci.md` — STEP A's base-branch handling at runtime.

@@ -25,7 +25,7 @@ flowchart TD
     FILES --> RUN["/autopilot-run  →  autopilot:orchestrate (under /loop)"]
 
     subgraph LOOP["Per firing — ONE phase, fresh context"]
-        RUN --> STATE["Locate state:<br/>git grep '(autopilot:feature_id): … gate PASSED' → done-set<br/>→ dependency-aware ready-set → lowest-id ready phase N"]
+        RUN --> STATE["Locate state:<br/>git log | grep '(autopilot:feature_id): … gate PASSED' → done-set<br/>→ dependency-aware ready-set → lowest-id ready phase N"]
         STATE --> DONE{ready-set empty<br/>& all phases done?}
         DONE -->|yes| OPT["Optimization pass<br/>→ integration PR (base→trunk)<br/>→ END loop"]
         DONE -->|no| ACC{Accelerators<br/>available?}
@@ -38,7 +38,7 @@ flowchart TD
         RP --> GATE["QUALITY GATE (templates/gate.md.tmpl)"]
         GATE --> VERDICT{All applicable<br/>checks green?}
         VERDICT -->|no| STOPF["Report failing check + output<br/>append FAILED ledger line<br/>leave work as-is → STOP (resume next firing)"]
-        VERDICT -->|yes| MARK["commit '(autopilot:feature_id): phase N — gate PASSED'<br/>append ledger line (runs/feature_id.jsonl)<br/>persist summary (ruflo mem if present)"]
+        VERDICT -->|yes| MARK["commit 'feat(autopilot:feature_id): phase N complete — gate PASSED'<br/>append ledger line (runs/feature_id.jsonl)<br/>persist summary (ruflo mem if present)"]
         MARK --> MODE{autonomy mode}
         MODE -->|reviewed| STOPR["STOP for human review"]
         MODE -->|pr_ci| PR["branch → PR → CI watch →<br/>fix-loop ≤ fix_budget → squash-merge into base"]
@@ -88,14 +88,16 @@ Every run is reconstructable from the target repo alone — no conversation memo
 noted) no ruflo and no beads. Everything is scoped by `feature_id`, so running autopilot repeatedly in
 one repo keeps each feature's state cleanly separate.
 
-| Artifact                       | Where                                                                   | Role                                                                                                                                                                                                               |
-| ------------------------------ | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `gate PASSED` markers          | git commits, `(autopilot:<feature_id>): phase N complete — gate PASSED` | **Authority** for "what phase is next" — re-derived by grep every firing                                                                                                                                           |
-| Session ledger                 | `.autopilot/runs/<feature_id>.jsonl` (committed)                        | **Replayable history** — first line is the plan snapshot (`type:plan`), then one JSON line per firing (phase · verdict · skipped · ci_attempts · PR · accelerators · timestamp), pass or fail. Works with no ruflo |
-| `pipeline.yml` / `profile.yml` | `.autopilot/` (committed)                                               | The plan + stack profile — editable, re-runnable                                                                                                                                                                   |
-| Branches / PRs (pr_ci)         | GitHub: `autopilot/<feature_id>/phase-N`, the integration PR            | In-flight resume points                                                                                                                                                                                            |
-| Phase summaries                | ruflo memory `autopilot` namespace — **only if ruflo present**          | Optional richer recall on later phases                                                                                                                                                                             |
-| Work-graph projection          | beads (`.beads/`) — **only if beads present**                           | Optional queryable/visual view of the graph (`bd ready`, `bd dep tree`); synced one-way from markers, never the authority — the graph itself lives in `pipeline.yml depends_on`                                    |
+| Artifact                       | Where                                                                       | Role                                                                                                                                                                                                               |
+| ------------------------------ | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `gate PASSED` markers          | git commits, `feat(autopilot:<feature_id>): phase N complete — gate PASSED` | **Authority** for "what is done" — the dependency-aware ready-set (markers + `depends_on` + open-blocker exclusion) is re-derived from it every firing                                                             |
+| Session ledger                 | `.autopilot/runs/<feature_id>.jsonl` (committed)                            | **Replayable history** — first line is the plan snapshot (`type:plan`), then one JSON line per firing (phase · verdict · skipped · ci_attempts · PR · accelerators · timestamp), pass or fail. Works with no ruflo |
+| `pipeline.yml` / `profile.yml` | `.autopilot/` (committed)                                                   | The plan + stack profile — editable, re-runnable                                                                                                                                                                   |
+| Discovered-work log            | `.autopilot/discovered/<feature_id>.jsonl` (committed)                      | Blockers + parking-lot items, append-only with provenance; an **open** blocker excludes its phase from the ready-set                                                                                               |
+| Court records                  | `.autopilot/court/<feature_id>/phase-N.md` (committed)                      | qe-court verdicts (SHIP / REMAND / BLOCK) for `risk_phases` and the integration PR — only when the accelerator runs                                                                                                |
+| Branches / PRs (pr_ci)         | GitHub: `autopilot/<feature_id>/phase-N`, the integration PR                | In-flight resume points                                                                                                                                                                                            |
+| Phase summaries                | ruflo memory `autopilot` namespace — **only if ruflo present**              | Optional richer recall on later phases                                                                                                                                                                             |
+| Work-graph projection          | beads (`.beads/`) — **only if beads present**                               | Optional queryable/visual view of the graph (`bd ready`, `bd dep tree`); synced one-way from markers, never the authority — the graph itself lives in `pipeline.yml depends_on`                                    |
 
 The ledger is the human-readable companion to the markers: markers answer _where are we_, the ledger
 answers _how did each phase get there_ — including FAILED attempts, which never leave a marker. To
@@ -152,9 +154,10 @@ flowchart LR
 ```
 
 Two guards keep it safe: **touch-set admission** (declare a phase's `touches:` globs; overlapping units
-run serially, not concurrently) and **conflict ⇒ re-queue, never hand-merge** (a rebase conflict drops
-the unit back to not-started to be re-implemented against the advanced base; after `K = 2` conflict-
-requeues it escalates to a human). `reviewed` mode is **always serial**, and `max_parallel: 1` is
+run serially, not concurrently) and **conflict ⇒ re-queue, never hand-merge** (a rebase conflict sends
+the PR to the queue tail, up to `requeue_budget` times; once that budget is exhausted the unit drops
+back to not-started to be re-implemented against the advanced base, and after `K = 2` such
+conflict-requeues it escalates to a human). `reviewed` mode is **always serial**, and `max_parallel: 1` is
 byte-for-byte the single-phase behavior — parallelism is strictly opt-in. Full design:
 [ADR-0002](adr/0002-parallel-ready-units-merge-queue.md); the operational playbook:
 `plugins/autopilot/skills/orchestrate/references/mode-pr-ci-parallel.md`.

@@ -14,7 +14,8 @@ durable sources (git + GitHub + the session ledger), not memory:
    next phase in order; "all phases complete" if the ready-set is empty and every phase is PASSED.
 3. Read `.autopilot/runs/<feature_id>.jsonl` (if present). Its **first line is the plan record**
    (`type:plan`) — use it for the phase list if `pipeline.yml` is missing or now describes a different
-   feature. Every other line is a firing record: one session (phase · verdict · skipped checks ·
+   feature. Every line without a `type` field (`court` and `requeue` lines also carry one) is a
+   firing record: one session (phase · verdict · skipped checks ·
    ci_attempts · PR · accelerators · timestamp). Use those to show how each phase landed, surface any
    FAILED attempts, and date the last activity.
 4. In `pr_ci` mode also check in-flight work for the next phase:

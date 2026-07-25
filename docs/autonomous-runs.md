@@ -27,8 +27,10 @@ autopilot runs in one of two modes, set by one line (`autonomy:`) in `.autopilot
 
 This is the combo from use case #2, explained:
 
-- **`autopilot:orchestrate`** is the worker. It looks at your project history, finds the next
-  unfinished phase, builds **exactly that one phase**, and **stops**. One phase per run — always.
+- **`autopilot:orchestrate`** is the worker. It looks at your project history, finds the next phase
+  that's ready, builds **exactly that one phase**, and **stops**. One phase per run by default
+  (`max_parallel: 1`) — raise `max_parallel` in autonomous mode and it builds several independent
+  ready phases at once (see below).
 - **`/loop`** is the driver. It re-runs orchestrate over and over, each time with a **fresh start**,
   until every phase is done. The fresh start each time is what keeps a long feature from overwhelming
   the AI's working memory.
@@ -60,9 +62,22 @@ In `pr_ci` mode, for each phase, autopilot:
 5. When checks are green, **merges** the phase into the integration branch (`base`).
 6. Moves to the next phase, fresh.
 
-When every phase has landed, autopilot opens **one final pull request** from the integration branch
+When every phase has landed, autopilot runs one last **optimization pass** (its own small pull
+request through the same checks), then opens **one final pull request** from the integration branch
 into your main branch — and **stops**. A human always makes that last merge. autopilot never merges
 into your main branch on its own.
+
+---
+
+## Running phases in parallel (opt-in)
+
+Set `max_parallel` above 1 in `.autopilot/pipeline.yml` (autonomous mode only) and autopilot builds
+several **independent** ready phases at the same time, each in its own scratch copy of your repo.
+Two rails keep this safe: phases that touch the same files never run together, and finished phases
+merge **one at a time**, each re-tested against the latest code first. A branch that won't merge
+cleanly is re-queued (up to `requeue_budget` times) and then rebuilt — never hand-untangled — and
+repeated conflicts escalate to you. `max_parallel: 1` (the default) is byte-for-byte the serial
+behavior described above.
 
 ---
 
@@ -71,8 +86,9 @@ into your main branch on its own.
 You don't have to wait for one feature to finish before planning the next. If you scope a follow-up
 while a run is still going, autopilot **parks** it — a "queued" plan saved on your machine — instead of
 disturbing the pipeline that's already running. When the active feature wraps up, autopilot stops and
-shows you the one-line command to **promote** the queued plan into the active slot and start it. It
-never auto-starts the next feature; each one begins when you say so.
+shows you the exact **promote** sequence from the lifecycle runbook — move the plan into the active
+slot, seed its logbook, commit — after which you start it with `/autopilot-run`. It never auto-starts
+the next feature; each one begins when you say so.
 
 Keep each feature its own pipeline: if a genuinely _unrelated_ idea comes up mid-run, queue it as a
 separate plan rather than bolting it onto the current one — that keeps every final pull request a
@@ -118,6 +134,10 @@ the design forbids. 🛡️
   rebuilds it from your up-to-date main branch as a brand-new branch — never a forced overwrite.
 - 🧭 **Bounded self-fixing.** autopilot retries a failing check only up to your `fix_budget`, then
   hands off to you instead of thrashing forever.
+- ⏸️ **Blocked work stops, it doesn't guess.** If a phase needs something that doesn't exist yet,
+  autopilot records a **blocker** (with where it came from) and pauses that phase rather than
+  improvising. `/autopilot-status` shows open blockers; `/autopilot-plan` resolves them, and the
+  phase resumes on its own once the prerequisite is done.
 
 ---
 
