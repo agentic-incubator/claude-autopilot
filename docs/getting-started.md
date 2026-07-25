@@ -48,8 +48,9 @@ It also takes a quick look at your project to figure out how to run your tests a
 you to confirm it got that right. (Those test/build commands are what it uses later to _prove_ each
 phase works — so a few seconds confirming them here is worth it.)
 
-You end up with two small files in your project, under a new `.autopilot/` folder. You can read and
-edit them like any other file; nothing is hidden.
+You end up with a small `.autopilot/` folder in your project: the plan, the detected build/test
+commands, and a logbook of every run. You can read and edit these like any other file; nothing is
+hidden.
 
 ---
 
@@ -72,7 +73,7 @@ Nothing has been built yet — you're just agreeing on the map before the trip.
 /autopilot-run
 ```
 
-**What this does for you:** autopilot picks the first unfinished phase, writes the tests for it,
+**What this does for you:** autopilot picks the next phase that's ready to go, writes the tests for it,
 writes the code to make those tests pass, double-checks its own work, and then **stops**. It shows
 you what it did and a green check that the tests really passed.
 

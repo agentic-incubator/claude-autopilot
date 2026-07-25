@@ -52,11 +52,11 @@ is ambiguous, before they calcify into a bad plan.
 `deep-research` is a skill that fans out web searches, fetches sources, **adversarially verifies
 claims**, and synthesizes a **cited** report.
 
-- **Install:** good news — there's nothing to install. `deep-research` comes built into Claude Code.
-  Type `/deep-research` to check it's there; if it isn't, updating Claude Code to the latest version
-  brings it in. (It needs internet access to actually search the web.)
+- **Install:** type `/deep-research` in Claude Code to check whether you already have it — it ships
+  with many Claude Code setups; if it isn't there, update Claude Code or install a deep-research
+  skill/plugin. (It needs internet access to actually search the web.)
 - **What it adds:** when your spec scores thin, autopilot scopes a research pass to the exact gaps and
-  writes a cited brief to `.autopilot/research/<feature>.md` — durable, reviewable evidence that
+  writes a cited brief to `.autopilot/research/<feature_id>.md` — durable, reviewable evidence that
   sharpens the spec. You confirm the findings before they shape any phase; research is evidence for your
   decision, never auto-accepted as fact.
 
@@ -95,7 +95,7 @@ fool:
   **SHIP / REMAND / BLOCK**, and any SHIP must survive an escalating deeper review before it stands.
   This closes autopilot's one structural blind spot — the model that wrote the code never gets to be
   the only one judging it. Needs a second vendor reachable (the `codex` CLI, or an OpenAI / Gemini /
-  OpenRouter key); with only one vendor autopilot honestly skips it rather than fake a jury. Control
+  OpenRouter / cognitum key); with only one vendor autopilot honestly skips it rather than fake a jury. Control
   it with `court: auto | off | all` in `pipeline.yml`
   ([ADR-0004](../plugins/autopilot/docs/adr/0004-qe-court-adversarial-verdict.md)).
 
@@ -128,12 +128,12 @@ Two things to know, because they keep autopilot honest:
 
 ## How they stack — each degrades gracefully
 
-| Step                  | Vanilla floor (always works)                     | + planning power-ups                                                    | + execution power-ups                                        |
-| --------------------- | ------------------------------------------------ | ----------------------------------------------------------------------- | ------------------------------------------------------------ |
-| **Plan a weak spec**  | Brainstorm + inline rubric sharpen the spec      | `clarity` + `deep-research` give cited, numbered, testable requirements | —                                                            |
-| **Sequence the work** | Dependency-aware ready-set from `depends_on`     | —                                                                       | `beads` makes the graph queryable/visual (`bd ready`)        |
-| **Implement a phase** | One focused agent at a time                      | —                                                                       | `ruflo` runs a parallel agent team + recalls past phases     |
-| **Gate a phase**      | Reviewer pass + `/code-review` + native coverage | —                                                                       | `aqe` adds mutation/coverage; pentest + chaos on risk phases |
+| Step                  | Vanilla floor (always works)                     | + planning power-ups                                                    | + execution power-ups                                                   |
+| --------------------- | ------------------------------------------------ | ----------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| **Plan a weak spec**  | Brainstorm + inline rubric sharpen the spec      | `clarity` + `deep-research` give cited, numbered, testable requirements | —                                                                       |
+| **Sequence the work** | Dependency-aware ready-set from `depends_on`     | —                                                                       | `beads` makes the graph queryable/visual (`bd ready`, `bd dep tree`)    |
+| **Implement a phase** | One focused agent at a time                      | —                                                                       | `ruflo` runs a parallel agent team + recalls past phases                |
+| **Gate a phase**      | Reviewer pass + `/code-review` + native coverage | —                                                                       | `aqe` adds mutation/coverage; qe-court + pentest + chaos on risk phases |
 
 If a tool isn't installed, that step simply runs at the level to its left. **Nothing ever blocks on a
 power-up being present** — the vanilla floor runs everywhere, every time, and a missing power-up never

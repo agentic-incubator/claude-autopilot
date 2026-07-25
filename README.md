@@ -108,7 +108,7 @@ stay put. 👌
 | `/autopilot-plan`   | 📋 (Re)generate the phase plan only.                                      |
 | `/autopilot-detect` | 🔎 (Re)detect + confirm your build/test/lint profile only.                |
 | `/autopilot-run`    | 🏃 Drive the next phase (or a named one).                                 |
-| `/autopilot-status` | 📊 Show progress: done / next / in-flight pull request + CI.              |
+| `/autopilot-status` | 📊 Show progress: done / ready next / open blockers / in-flight PR + CI.  |
 
 Commands are thin wrappers — the real logic lives in four skills (`plan`, `detect`, `run-phase`,
 `orchestrate`), so Claude can also invoke them automatically when the moment fits. 🪄
@@ -120,7 +120,8 @@ Commands are thin wrappers — the real logic lives in four skills (`plan`, `det
 `reviewed` mode (the default) needs only a **local git repo** — perfect for trying it out. Hands-off
 `pr_ci` mode adds a **GitHub** repo with `gh` logged in and **CI on pull requests** (autopilot sets
 that up for you if you don't have it). The optional **planning** (superpowers, clarity, deep-research)
-and **execution** (ruflo, agentic-qe) power-ups are all detected automatically and degrade gracefully
+and **execution** (ruflo, agentic-qe with its qe-court, beads) power-ups are all detected
+automatically and degrade gracefully
 when absent. Full details in
 [Autonomous runs](docs/autonomous-runs.md#what-you-need-for-pr_ci-mode).
 
@@ -131,6 +132,7 @@ when absent. Full details in
 ```
 .claude-plugin/marketplace.json      # this repo is its own marketplace
 docs/                                # user guides (getting-started, concepts, use-cases, autonomous-runs, power-ups)
+docs/maintainers.md                  # release process (release-please)
 plugins/autopilot/
   .claude-plugin/plugin.json
   skills/{plan,detect,run-phase,orchestrate}/SKILL.md
@@ -138,6 +140,7 @@ plugins/autopilot/
   templates/{pipeline.yml,profile.yml,gate.md.tmpl,ci-gate.yml.tmpl}
   docs/WORKFLOW.md                   # deep design rationale
   docs/lifecycle.md                  # multi-pipeline runbook: queue → promote → retire
+  docs/adr/                          # decision records (work graph, parallel queue, discovered work, qe-court)
 ```
 
 ---

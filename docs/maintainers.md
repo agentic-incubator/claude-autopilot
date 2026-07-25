@@ -28,7 +28,9 @@ messages (see "Releasing" below). The commit type drives the bump:
   footer. While the plugin is pre-1.0, breaking changes bump the minor instead (configured via
   `bump-minor-pre-major`).
 
-Three version fields are kept in lockstep automatically and must always agree (CI enforces it):
+Three version fields are kept in lockstep automatically by release-please and must always agree
+(CI cross-checks the two manifests; `package.json` is bumped by the `node` release type but is not
+cross-checked):
 
 - `plugins/autopilot/.claude-plugin/plugin.json` → `version`
 - `.claude-plugin/marketplace.json` → `metadata.version`
@@ -44,7 +46,7 @@ How it flows:
 
 1. Land work on `main` as usual (PRs with Conventional Commit titles — see `CONTRIBUTING.md`).
    Because you squash-merge, the PR title becomes the commit release-please reads.
-2. On every push to `main`, release-please opens (or updates) a **`chore: release X.Y.Z`** PR
+2. On every push to `main`, release-please opens (or updates) a **`chore(main): release X.Y.Z`** PR
    that bumps all three version fields and regenerates `CHANGELOG.md` from the commits since the
    last release.
 3. When you're ready to ship, **merge that release PR**. release-please then creates the
@@ -67,15 +69,16 @@ the CHANGELOG's `compare/` links resolve).
 >   permissions → _Allow GitHub Actions to create and approve pull requests_, then also set the
 >   repo's default workflow permissions to read/write.
 
-To start a release manually (instead of waiting for the next push), re-run the **Release**
-workflow from the Actions tab.
+To start a release manually (instead of waiting for the next push), re-run the most recent
+**Release** run from the Actions tab (the workflow triggers only on pushes to `main` — it has no
+manual-dispatch button).
 
 ## What CI guarantees
 
 | Workflow            | Gate                                                                            |
 | ------------------- | ------------------------------------------------------------------------------- |
 | `ci.yml` → validate | Manifests are valid JSON, versions agree, every referenced command/skill exists |
-| `ci.yml` → check    | Prettier + markdownlint clean                                                   |
+| `ci.yml` → check    | Manifest validation + ADR proofs + Prettier + markdownlint                      |
 | `ci.yml` → audit    | No moderate-or-higher dependency advisories                                     |
 | `link-check.yml`    | All markdown links resolve (weekly cron opens an issue on rot)                  |
 | `release.yml`       | Maintains the release PR; tags + cuts the GitHub Release on merge               |

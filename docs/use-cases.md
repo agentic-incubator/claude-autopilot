@@ -44,9 +44,9 @@ point it at the folder.**
 /autopilot-init "Migrate billing to NewPay; keep the old gateway behind a switch until cutover (spec: docs/migration.md)"
 ```
 
-autopilot scans your project for design docs and lists what it found in its settings file
-(`.autopilot/pipeline.yml`). It then breaks the work into small, shippable **phases**, and on each
-phase records _which_ design docs that phase must respect — so later, each phase reads only its own
+autopilot breaks the work into small, shippable **phases**, then scans your project for design docs
+and lists what it found in its settings file (`.autopilot/pipeline.yml`). On each phase it records
+_which_ design docs that phase must respect — so later, each phase reads only its own
 slice, never the whole stack. It shows you the phase list; skim it and fix anything that looks off.
 When you're ready to let it run hands-off, change one line to `autonomy: pr_ci`.
 

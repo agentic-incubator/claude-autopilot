@@ -5,10 +5,11 @@ green checks." Read this when running Step 5 of `run-phase`, or when a gate resu
 
 ## Rendering the template
 
-`templates/gate.md.tmpl` uses two namespaces:
+`templates/gate.md.tmpl` uses three namespaces:
 
 - `{{commands.*}}` from `.autopilot/profile.yml`
 - `{{phase.*}}` from the target entry in `.autopilot/pipeline.yml`
+- `{{pipeline.*}}` from the top-level block of `.autopilot/pipeline.yml` (e.g. `feature_id`, `goal`)
 
 Resolve them, then run the checklist. An **empty command string means SKIP** — report it as
 `skipped (no command configured)`, never as a pass. Silently treating an unconfigured check as green
@@ -130,7 +131,8 @@ The ledger's **first line is the plan record** (`{"type":"plan", …, "phases":[
 `autopilot:plan` (for an active plan) or at **promotion** (for a plan that was queued — see
 `docs/lifecycle.md`). It snapshots the phase set so the history stays interpretable even if
 `pipeline.yml` is later overwritten by another feature's plan. The plan record is the only line carrying
-`"type":"plan"`; **every other line is a firing record** — skip the plan line when summarizing firings.
+`"type":"plan"`; every line without a `type` field is a firing record — skip typed lines (`plan`,
+`court`, `requeue`) when summarizing firings.
 
 > **Retrofitting a legacy ledger.** Ledgers written before record 0 existed (pre-0.7.0) have no
 > `type:plan` line. Reconstruct one from the committed `pipeline.yml` and prepend it, reading `at` from

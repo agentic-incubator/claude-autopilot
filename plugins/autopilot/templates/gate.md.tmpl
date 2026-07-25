@@ -47,10 +47,13 @@ BLOCK → gate BLOCKED (blocker with discovered_by:"court"). Single vendor reach
 
 ## Verdict
 - ALL applicable boxes green  → gate PASSED. Commit the feature-scoped marker
-  `(autopilot:{{pipeline.feature_id}}): phase {{phase.id}} complete — gate PASSED`; persist the phase
+  `feat(autopilot:{{pipeline.feature_id}}): phase {{phase.id}} complete — gate PASSED`; persist the phase
   summary; append one JSONL line to `.autopilot/runs/{{pipeline.feature_id}}.jsonl`.
 - ANY applicable box red      → gate FAILED. Report which check + its output. Leave work as-is. Append a
   `"verdict":"FAILED"` JSONL line to `.autopilot/runs/{{pipeline.feature_id}}.jsonl`. STOP.
+- Court verdict BLOCK         → gate BLOCKED. Record the blocker (`discovered_by:"court"`) in
+  `.autopilot/discovered/{{pipeline.feature_id}}.jsonl`, append a `"verdict":"BLOCKED"` JSONL line to
+  `.autopilot/runs/{{pipeline.feature_id}}.jsonl`, and STOP — no marker commit.
 
 Every firing — pass or fail — logs exactly one ledger line, so the run is fully replayable from disk
 (see `run-phase` references/gate.md for the schema). The ledger is the human-readable companion to the

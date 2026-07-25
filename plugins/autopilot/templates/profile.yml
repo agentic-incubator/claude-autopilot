@@ -79,7 +79,7 @@ accelerators:
   ruflo:        { available: false, scope: "" }   # scope: "global" | "project" | ""
   # agentic-qe → drives the measured-quality fleet layered onto the gate (Tier 2/4):
   #   coverage_analyze_sublinear every phase; mutation/pentest/chaos on risk_phases via fleet_init.
-  #   Also exposes requirements_validate / qe_requirements_quality-criteria — used by `plan` step 1.5
+  #   Also exposes requirements_validate / qe_requirements_quality-criteria — used by `plan` step 2
   #   to score spec readiness when present.
   agentic_qe:   { available: false, scope: "" }
   # qe-court (aqe ≥ 3.13, ADR-124) → an adversarial review COURT: blind parallel prosecutors from
@@ -109,5 +109,5 @@ accelerators:
   #   `plan` uses it to draft machine-checkable DoD lines.
   clarity:      { available: false, scope: "" }
   # deep_research → grounded, CITED research that enriches a thin spec before decomposition.
-  #   `plan` step 1.5 drives it when the spec scores low; the cited brief lands in .autopilot/research/.
+  #   `plan` step 2 drives it when the spec scores low; the cited brief lands in .autopilot/research/.
   deep_research: { available: false, scope: "" }

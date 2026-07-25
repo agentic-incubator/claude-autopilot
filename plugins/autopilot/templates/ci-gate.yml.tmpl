@@ -44,6 +44,8 @@ jobs:
         run: {{commands.build}}
       - name: test
         run: {{commands.test}}
+      - name: frontend
+        run: {{commands.test_frontend}}     # if set
       - name: integration
         run: {{commands.test_integration}}  # if set
       - name: audit

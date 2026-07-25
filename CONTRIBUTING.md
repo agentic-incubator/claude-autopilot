@@ -18,8 +18,11 @@ plugins/autopilot/
   commands/autopilot-*.md              # thin slash-command wrappers
   skills/{plan,detect,run-phase,orchestrate}/SKILL.md   # the real logic
   templates/                           # scaffolded verbatim into a target repo's .autopilot/
+  docs/                                # design docs: WORKFLOW.md, lifecycle.md, adr/, examples/
 docs/                                  # user-facing guides
 scripts/validate-manifests.mjs         # structural-invariant checker (runs in CI)
+scripts/verify-ready-set.mjs           # ADR-0001/0003 executable proof (runs in CI)
+scripts/verify-parallel-merge-queue.mjs  # ADR-0002 executable proof (runs in CI)
 ```
 
 ## The invariants — do not break these
@@ -52,7 +55,7 @@ Install dev dependencies once, then run the checks before opening a PR:
 
 ```bash
 pnpm install
-pnpm run check        # validate manifests + Prettier + markdownlint
+pnpm run check        # validate manifests + ADR proofs + Prettier + markdownlint
 pnpm run fix          # auto-fix formatting and lint issues
 pnpm run link-check   # verify markdown links resolve (needs network)
 ```
@@ -60,8 +63,9 @@ pnpm run link-check   # verify markdown links resolve (needs network)
 `pnpm run validate` runs the manifest checker on its own (plain Node, no install needed). It
 enforces: valid JSON manifests, agreeing versions, every README-referenced command exists,
 and every skill directory has a `SKILL.md` whose frontmatter `name` matches the directory.
-`pnpm run proof` runs `scripts/verify-ready-set.mjs`, an executable proof of the dependency-aware
-ready-set (ADR-0001); both run inside `pnpm run check`.
+`pnpm run proof` runs both executable proofs — `scripts/verify-ready-set.mjs` (the ADR-0001
+dependency-aware ready-set plus ADR-0003 blocker semantics) and `scripts/verify-parallel-merge-queue.mjs`
+(the ADR-0002 parallel merge-queue model); everything runs inside `pnpm run check`.
 
 CI runs the same checks on every pull request — `validate`, `check`, a security `audit`, and a
 markdown link check.

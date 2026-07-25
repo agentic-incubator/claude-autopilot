@@ -25,3 +25,10 @@ npm-debug.log*
 
 # OS
 .DS_Store
+
+# Codex local configuration and generated agent tooling
+.codex/
+.agents/
+
+# Claude Code local config
+CLAUDE.local.md

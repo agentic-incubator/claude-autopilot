@@ -17,17 +17,20 @@ itself stays neutral:
 | Acceleration tooling                     | capability-detected accelerators; graceful Tier-3 fallback |
 | Security invariants                      | `security_invariants:` list (universal defaults)           |
 
-Everything else — git markers as durable state, one-phase-per-context, reviewed/pr_ci modes, the
-fix-budget handoff, the final `base → trunk` PR — is stack-neutral by design.
+Everything else — git markers as durable state, one-phase-per-context (per slot when
+`max_parallel > 1`), reviewed/pr_ci modes, the fix-budget handoff, the final `base → trunk` PR — is
+stack-neutral by design.
 
 ## Durable state & replay
 
-Two artifacts make a run reconstructable from the repo alone, both scoped by `feature_id` (a slug in
-`pipeline.yml`) so repeated runs in one repo never collide:
+Four committed artifacts make a run reconstructable from the repo alone, all scoped by `feature_id`
+(a slug in `pipeline.yml`) so repeated runs in one repo never collide:
 
-- **Git `gate PASSED` markers** — `(autopilot:<feature_id>): phase N complete — gate PASSED` commits.
-  The **authority** for "what phase is next," re-derived by grep every firing. Scoping by `feature_id`
-  fixes the multi-run hazard where a second feature's marker grep would otherwise match the first's.
+- **Git `gate PASSED` markers** — `feat(autopilot:<feature_id>): phase N complete — gate PASSED` commits.
+  The **authority** for "what is done," re-derived by grep every firing; the dependency-aware ready-set
+  (markers + `pipeline.yml depends_on` + open-blocker exclusion) computes "what is next" from it.
+  Scoping by `feature_id` fixes the multi-run hazard where a second feature's marker grep would
+  otherwise match the first's.
 - **Session ledger** — `.autopilot/runs/<feature_id>.jsonl`. Its first line is a plan snapshot (written
   by `plan`, so the history stays interpretable even after `pipeline.yml` is overwritten by the next
   feature); every line after is one firing (phase, verdict, skipped checks, ci_attempts, PR,
@@ -35,6 +38,11 @@ Two artifacts make a run reconstructable from the repo alone, both scoped by `fe
   FAILED attempts, which never leave a marker — and it works on a vanilla repo with no ruflo.
   `/autopilot-status` reads it; ruflo memory, when present, is an optional richer layer on top, never a
   requirement.
+- **Discovered-work log** — `.autopilot/discovered/<feature_id>.jsonl`, committed. Blockers (work a
+  phase needs but can't do — an **open** blocker removes its phase from the ready-set, so replay needs
+  this file too) and parking-lot notes (observed, never acted on). Append-only, provenance-stamped.
+- **Court records** — `.autopilot/court/<feature_id>/phase-N.md`, committed with the phase when the
+  qe-court accelerator runs on `risk_phases` or the integration PR (SHIP / REMAND / BLOCK verdicts).
 
 ## Many pipelines over time: queue → promote → retire
 
@@ -95,7 +103,7 @@ floor when absent (absence never blocks a phase):
   coverage) make phases faster and the heavy `risk_phases` passes possible. Floor: a reviewer subagent
   plus `/code-review` + native coverage.
 - **Planning** — the `superpowers:brainstorming`, `clarity`, and `deep-research` skills sharpen a thin
-  spec before it's decomposed (`plan` step 1.5: score readiness → cited research → testable
+  spec before it's decomposed (`plan` step 2: score readiness → cited research → testable
   requirements). Floor: inline brainstorm/rubric.
 
 This is what lets the plugin run on a vanilla repo with nothing but Claude Code, git, and `gh`.

@@ -8,7 +8,8 @@ description: >-
   Discovers which phase is next from git markers (no conversation memory needed, so it's resumable
   forever), runs one phase per firing, and in pr_ci mode branches -> opens a PR -> watches GitHub CI ->
   runs a bounded fix-loop -> squash-merges into the integration branch. Stack-agnostic; the only hard
-  dependency is a GitHub repo whose CI runs on PRs into the base branch (autopilot:detect verifies this
+  dependency in pr_ci mode is a GitHub repo whose CI runs on PRs into the base branch (reviewed mode
+  needs just a local git repo; autopilot:detect verifies this
   and scaffolds a gate workflow if it is missing). Trigger it whenever a repo has .autopilot/pipeline.yml and the
   user wants progress without babysitting.
 ---
@@ -125,8 +126,8 @@ carries everything else as compact summaries.
 - A merge conflict is **never hand-resolved** under autonomy — it re-queues the unit for a fresh
   re-implementation against the advanced base, and escalates to a human after `K = 2` conflict-requeues
   (pr_ci parallel only).
-- The agent never self-certifies: in pr*ci, remote CI is the merge authority — and a PR that ran ZERO
-  required checks is \_skipped*, never green. Never merge a check-less PR (that is self-certification by
+- The agent never self-certifies: in `pr_ci`, remote CI is the merge authority — and a PR that ran ZERO
+  required checks is _skipped_, never green. Never merge a check-less PR (that is self-certification by
   another name). Base CI coverage is a hard prereq for exactly this reason.
 - Load only the current phase's slice; the durable tier carries the rest.
 
