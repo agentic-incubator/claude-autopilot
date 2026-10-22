@@ -1,2 +1,10 @@
+# pnpm settings (pnpm ≥11 reads overrides from here, not package.json).
 overrides:
-  js-yaml: ">=5.2.2"
+  # js-yaml: markdownlint-cli 0.49.1 (latest) pins ~5.2.1. 5.2.2 fixed GHSA-pm4m-ph32-ghv5;
+  # GHSA-r3ph-w7gj-g6xm (merge-key CPU use) needs >=5.4.1. Kept within the 5.x major.
+  # Drop once markdownlint-cli ships a bumped js-yaml.
+  js-yaml: "^5.4.1"
+  # smol-toml: markdownlint-cli 0.49.1 pins ~1.7.0, which carries GHSA-7w5x-hrqm-74c2
+  # (malformed-input DoS) and GHSA-r4xh-jqrq-34v2 (quadratic-time parse), patched in 1.9.0.
+  # Kept within the 1.x major. Drop once markdownlint-cli ships a bumped smol-toml.
+  smol-toml: "^1.9.0"
