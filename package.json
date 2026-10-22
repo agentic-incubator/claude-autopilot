@@ -5,7 +5,7 @@
   "description": "Quality and validation tooling for the claude-autopilot marketplace. The deliverable is prompt content (skills, commands, templates); these scripts keep the manifests valid and the docs lint-clean.",
   "license": "MIT",
   "type": "module",
-  "packageManager": "pnpm@11.0.0",
+  "packageManager": "pnpm@11.28.6",
   "engines": {
     "node": ">=22"
   },
