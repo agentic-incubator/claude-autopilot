@@ -7,7 +7,7 @@ slash-command `.md` files, and the YAML/markdown templates scaffolded into a use
 manifests stay valid.
 
 For the design rationale, read [`README.md`](README.md), [`plugins/autopilot/README.md`](plugins/autopilot/README.md),
-and [`CLAUDE.md`](CLAUDE.md). Maintainers cutting a release should read [`docs/maintainers.md`](docs/maintainers.md).
+and [`AGENTS.md`](AGENTS.md). Maintainers cutting a release should read [`docs/maintainers.md`](docs/maintainers.md).
 
 ## Repository layout
 
